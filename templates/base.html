@@ -1,0 +1,29 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+
+    <title>{% block title %}{% if title %}{{ title }}{% else %}GeoSampler{% endif %}{% endblock %}</title>
+    {% include  "base/css.html" %}
+    {% block styles %}
+    {% endblock %}
+</head>
+<body>
+
+{#{% include "base/navbar.html" with brand_name="Geo" %}#}
+<div class="container-fluid">
+{% block content %}
+{% endblock %}
+</div>
+</body>
+{% include "base/js.html" %}
+
+{% block scripts %}
+{% endblock %}
+</body>
+</html>

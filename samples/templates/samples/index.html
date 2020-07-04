@@ -1,17 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-{# yonetim/templates/list.html #}
-{% load render_table from django_tables2 %}
-{% load static %}
+{% block content %}
 
-        {% render_table istekler %}
+    <div class="row">
 
+        <div class="col-11 mx-auto">
+            <div class="alert alert-secondary" role="alert" style="min-height: 400px">
+                Map will go here
+            </div>
+        </div>
 
-</body>
-</html>
+    </div>
+
+    <div class="row">
+        <div class="col-11">
+            <div class="row mb-3">
+
+                <div class="col-3, ml-auto">
+                    <form action="new/">
+                        <button type="submit" class="btn btn-success">Add new row</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mx-auto">
+                    {# yonetim/templates/list.html #}
+            {% load render_table from django_tables2 %}
+            {% load static %}
+
+            {% render_table table %}
+        </div>
+
+    </div>
+
+{% endblock %}
