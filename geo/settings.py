@@ -25,7 +25,7 @@ SECRET_KEY = '(6l&t0bu%&^%^(!gf)1d$&)%g_qc!-u-zl)1t+t!0sm&#xin2d'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["geo.trevor-sullivan.tech"]
+ALLOWED_HOSTS = ["geo.trevor-sullivan.tech", "localhost"]
 
 
 # Application definition
@@ -38,8 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'samples',
+    'accounts',
     'django_tables2',
+    'crispy_forms',
 ]
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -51,6 +55,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+LOGOUT_REDIRECT_URL = "/login/"
 ROOT_URLCONF = 'geo.urls'
 
 TEMPLATES = [

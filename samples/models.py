@@ -1,3 +1,5 @@
+import decimal
+
 from django.db import models
 
 # Create your models here.
@@ -50,7 +52,7 @@ SULFIDE_CHOICES = (
 #         qs = super(SampleManager, self).get_queryset().annotate(awwa=F('get_awwa_rating'))
 
 class Sample(models.Model):
-    sample_no = models.CharField(max_length=120)
+    sample_no = models.CharField(max_length=120, unique=True)
     job_no = models.CharField(max_length=120)
     job_name = models.CharField(max_length=120)
     latitude = models.DecimalField(decimal_places=6, max_digits=10)
@@ -69,11 +71,14 @@ class Sample(models.Model):
     resistivity_saturated = models.DecimalField(decimal_places=2, max_digits=10)
     carbonate = models.BooleanField()
     sulfide = models.CharField(max_length=32, choices=SULFIDE_CHOICES)
-    moisture_content = models.DecimalField(decimal_places=2, max_digits=10, blank=True)
-    comments = models.TextField(blank=True)
-    awwa = models.CharField(max_length=32, blank=True)
+    moisture_content = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+    comments = models.TextField(blank=True, null=True)
+    awwa = models.CharField(max_length=32, blank=True, null=True)
 
     # objects = SampleManager()
+
+    def __str__(self):
+        return self.sample_no + " " + self.job_name
 
     @property
     def get_awwa_rating(self):
@@ -83,7 +88,8 @@ class Sample(models.Model):
         print(self.get_resistivity_simplified())
         print(self.get_sulfide_simplified())
         print(self.sulfide)
-        score = self.ph + self.get_redox() + self.get_resistivity_simplified() + self.get_sulfide_simplified()
+        score = decimal.Decimal(self.ph) + decimal.Decimal(self.get_redox()) + \
+                decimal.Decimal(self.get_resistivity_simplified()) + decimal.Decimal(self.get_sulfide_simplified())
 
         if score > 9.9:
             return "Severe"

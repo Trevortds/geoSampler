@@ -18,13 +18,18 @@ from django.urls import path, include
 from .views import home_page
 from django.conf.urls.static import static
 from django.conf import settings
+from accounts.views import login_page, register_page
+from django.contrib.auth.views import LogoutView
 
 import samples
 
 urlpatterns = [
     path('', home_page, name="home"),
     path('admin/', admin.site.urls),
-    path('samples/', include('samples.urls'), name="samples")
+    path('login/', login_page, name="login"),
+    path('logout/', LogoutView.as_view(), name="logout"),
+    path('samples/', include(('samples.urls', "samples")), name="samples"),
+    path('register/', register_page, name="register"),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,70 @@
+{% url 'home' as home_url%}
+{% url 'samples:index' as samples_url%}
+{% url 'login' as login_url%}
+{% url 'logout' as logout_url%}
+{% url 'register' as register_url%}
+{% url 'products:list' as products_url%}
+{% url 'products:detail' slug='kelvi' as kelvi_url%}
+{% url 'cart:home' as cart_url%}
+
+{#<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">#}
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3">
+    <div class="container">
+    <a class="navbar-brand" href="{{ home_url }}"> {% if brand_name %} {{ brand_name }}{% else %}GeoSampler{% endif %}</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item {% if request.path == home_url %}active{% endif %}">
+                <a class="nav-link" href="{{ home_url }}">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item {% if request.path == samples_url %}active{% endif %}">
+                <a class="nav-link" href="{{ samples_url }}">Samples</a>
+            </li>
+{#            <li class="nav-item dropdown {% if products_url in request.path %}active{% endif %}">#}
+{#                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">#}
+{#                    Products#}
+{#                </a>#}
+{#                <div class="dropdown-menu bg-primary" aria-labelledby="navbarDropdown">#}
+{#                    <a class="dropdown-item" style="color:#fff" href="{{ products_url }}">All products</a>#}
+{#                    <a class="dropdown-item" style="color:#fff" href="{{ kelvi_url }}">Kelvi</a>#}
+{#                    <div class="dropdown-divider" style="border-top: 1px solid #999"></div>#}
+{#                    <a class="dropdown-item" style="color:#fff" href="#">Something else here</a>#}
+{#                </div>#}
+{#            </li>#}
+{#            <li class="nav-item">#}
+{#                <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>#}
+{#            </li>#}
+        </ul>
+        <ul class="navbar-nav navbar-right">
+            {% if request.user.is_authenticated %}
+                <span class="navbar-text">
+                    Hi, {{ request.user }}!
+                </span>
+                {% if request.user.is_superuser %}
+                    <li class="nav-item">
+                    <a class="nav-link" href="/admin/">Admin</a>
+                    </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == logout_url %}active{% endif %}" href="{{ logout_url }}">Log Out</a>
+                </li>
+            {% else %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == login_url %}active{% endif %}" href="{{ login_url }}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == register_url %}active{% endif %}" href="{{ register_url }}">Register</a>
+                </li>
+            {% endif %}
+        </ul>
+{#        uncomment this for a search box#}
+{#        <form class="form-inline my-2 my-lg-0">#}
+{#            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">#}
+{#            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>#}
+{#        </form>#}
+    </div>
+    </div>
+</nav>
