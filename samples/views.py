@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.utils.http import is_safe_url
 
+from .admin import SampleResource
 from .forms import SampleForm
 from .models import Sample
 from django_tables2 import SingleTableView
@@ -42,3 +43,10 @@ def newSampleForm(request):
             return redirect("samples:index")
 
     return render(request, 'samples/new.html', context)
+
+def export(request):
+    sample_resource = SampleResource()
+    dataset = sample_resource.export()  # TODO add a filter here by including queryset as arg to export
+    response = HttpResponse(dataset.csv, content_type='text/csv')
+    response["Content-Disposition"] = 'attachment; filename="samples.csv'
+    return response

@@ -1,6 +1,6 @@
 import decimal
 
-from django.db import models
+from django.contrib.gis.db import models
 
 # Create your models here.
 from django.db.models import F
@@ -74,6 +74,9 @@ class Sample(models.Model):
     moisture_content = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     awwa = models.CharField(max_length=32, blank=True, null=True)
+
+    # mpoly = models.MultiPolygonField()
+    point = models.PointField(null=True)
 
     # objects = SampleManager()
 
