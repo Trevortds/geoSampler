@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'django_tables2',
     'crispy_forms',
     'import_export',
+    'django_filters',
+    'bootstrap3',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

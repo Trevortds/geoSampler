@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load bootstrap3 %}
 {% block content %}
 
     <div class="row">
@@ -32,13 +32,37 @@
 
     <div class="row">
         <div class="col-12 mx-auto">
-                    {# yonetim/templates/list.html #}
-            {% load render_table from django_tables2 %}
-            {% load static %}
 
-            {% render_table table %}
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#filtercollapse" role="button" aria-expanded="false" aria-controls="collapseFilters">
+                Expand Filters
+            </button>
+
+            <div class="collapse" id="filtercollapse">
+                <div class="card card-body">
+                    {% if filter %}
+                        <form action="" method="get" class="form form-inline">{% csrf_token %}
+                            {% bootstrap_form filter.form layout='inline' %}
+        {#                    {{  filter.form.as_p }}#}
+                            <br>
+                            <button type="submit" class="btn btn-success">Filter</button>
+                            <a class="btn btn-warning" href="{% url 'samples:index' %}">Reset</a>
+                        </form>
+                    {% else %}
+                        <p>Filter is missing, something has gone wrong</p>
+                    {% endif %}
+                </div>
+            </div>
+
         </div>
 
     </div>
+    <div class="row">
+        <div class="col-12 mx-auto">
+            {# yonetim/templates/list.html #}
 
+            {% load render_table from django_tables2 %}
+            {% load static %}
+            {% render_table table %}
+        </div>
+    </div>
 {% endblock %}

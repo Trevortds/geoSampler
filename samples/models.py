@@ -3,6 +3,8 @@ import decimal
 from django.contrib.gis.db import models
 
 # Create your models here.
+from django.contrib.gis.geos import Point
+from django.core.validators import MinValueValidator
 from django.db.models import F
 from django.db.models.signals import pre_save
 
@@ -55,19 +57,21 @@ class Sample(models.Model):
     sample_no = models.CharField(max_length=120, unique=True)
     job_no = models.CharField(max_length=120)
     job_name = models.CharField(max_length=120)
-    latitude = models.DecimalField(decimal_places=6, max_digits=10)
-    longitude = models.DecimalField(decimal_places=6, max_digits=10)
+    latitude = models.DecimalField(decimal_places=6, max_digits=20)
+    longitude = models.DecimalField(decimal_places=6, max_digits=20)
     depth = models.DecimalField(decimal_places=2, max_digits=5)
     soil_type = models.CharField(max_length=32, choices=SOIL_TYPE_CHOICES)
     texture = models.CharField(max_length=32, choices=TEXTURE_CHOICES)
     color = models.CharField(max_length=32, choices=COLOR_CHOICES)
     ph = models.DecimalField(decimal_places=2, max_digits=10)
-    redox_potential = models.DecimalField(decimal_places=2, max_digits=10)
+    redox_potential = models.DecimalField(decimal_places=2, max_digits=10, validators=[MinValueValidator(
+        decimal.Decimal('0.001'))])
     conductivity = models.DecimalField(decimal_places=3, max_digits=10)
     chloride = models.DecimalField(decimal_places=2, max_digits=10)
     sulfate = models.DecimalField(decimal_places=1, max_digits=10)
     salinity = models.DecimalField(decimal_places=2, max_digits=10)
-    resistivity_as_collected = models.DecimalField(decimal_places=2, max_digits=10)
+    resistivity_as_collected = models.DecimalField(decimal_places=2, max_digits=10, validators=[MinValueValidator(
+        decimal.Decimal('0.001'))])
     resistivity_saturated = models.DecimalField(decimal_places=2, max_digits=10)
     carbonate = models.BooleanField()
     sulfide = models.CharField(max_length=32, choices=SULFIDE_CHOICES)
@@ -76,12 +80,15 @@ class Sample(models.Model):
     awwa = models.CharField(max_length=32, blank=True, null=True)
 
     # mpoly = models.MultiPolygonField()
-    point = models.PointField(null=True)
+    point = models.PointField(blank=True, null=True)
 
     # objects = SampleManager()
 
     def __str__(self):
         return self.sample_no + " " + self.job_name
+
+    def get_point(self):
+        return Point(float(self.latitude), float(self.longitude))
 
     @property
     def get_awwa_rating(self):
@@ -145,6 +152,7 @@ class Sample(models.Model):
 
 def pre_save_sample_reciever(sender, instance, *args, **kwargs):
     instance.awwa = instance.get_awwa_rating
+    instance.point = instance.get_point()
 
 
 pre_save.connect(pre_save_sample_reciever, sender=Sample)

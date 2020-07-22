@@ -8,6 +8,10 @@ COPY nginx.default /etc/nginx/sites-available/default
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 
+# Install necessary dependencies for spatialite (don't need this when switched to postgres)
+RUN apt-cache search mod_spatialite
+RUN apt-get install -y gdal-bin python3-gdal libspatialite7 libspatialite-dev libsqlite3-mod-spatialite
+
 # copy source and install dependencies
 RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/pip_cache

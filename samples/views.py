@@ -1,11 +1,13 @@
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.utils.http import is_safe_url
+from django_filters.views import FilterView
+from django_tables2 import SingleTableView
 
 from .admin import SampleResource
+from .filters import SampleFilter
 from .forms import SampleForm
 from .models import Sample
-from django_tables2 import SingleTableView
 from .tables import SampleTable
 # Create your views here.
 
@@ -17,10 +19,13 @@ from .tables import SampleTable
 #     return render(request, 'samples/index.html', locals())
 
 
-class SampleListView(SingleTableView):
+class SampleListView(FilterView, SingleTableView):
     model = Sample
     table_class = SampleTable
     template_name = 'samples/index.html'
+
+    filterset_class = SampleFilter
+    # filter = SampleFilter(queryset=Sample.objects.all())
 
 
 def newSampleForm(request):
