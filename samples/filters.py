@@ -13,6 +13,7 @@ class SampleFilter(django_filters.FilterSet):
     sample_no = django_filters.CharFilter(field_name="sample_no", lookup_expr='icontains')
     job_name = django_filters.AllValuesFilter(field_name="job_name")
 
+    # Use the "filtering the queryset" method here https://django-filter.readthedocs.io/en/stable/guide/usage.html
 
     class Meta:
         model = Sample
