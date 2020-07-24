@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+    <div class="row">
+
+        <div class="col-9 mx-auto">
+{#            #TODO add a map that updates as the user fills out long and lat#}
+            <form method="POST" enctype="multipart/form-data" action="{% url 'samples:upload_csv2' %}"> {% csrf_token %}
+                <input type="file" name="myfile">
+                <button type="submit" class="btn btn-success mt-2">Upload</button>
+            </form>
+        </div>
+
+    </div>
+
+
+
+{% endblock %}

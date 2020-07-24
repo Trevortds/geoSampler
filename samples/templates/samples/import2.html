@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-9 mx-auto">
+
+            <p class="text-center">Please help us ensure that your data is imported correctly, by ensuring that the field names below are
+                properly matched. </p>
+        </div>
+    </div>
+{#    <div class="row">#}
+{#        Import page 2#}
+{##}
+{#        <div class="col-9 mx-auto">#}
+{#            #TODO add a map that updates as the user fills out long and lat#}
+{#            <form method="POST" enctype="multipart/form-data"> {% csrf_token %}#}
+{#                <input type="text" name="sometext">#}
+{#                <button type="submit" class="btn btn-success mt-2">go</button>#}
+{#            </form>#}
+{#        </div>#}
+{##}
+{#    </div>#}
+    <form method="POST" enctype="multipart/form-data"> {% csrf_token %}
+    <div class="row">
+        <div class="col-3">
+{#            <input type="text" name="sometext">#}
+            <p>Available Input CSV fields</p>
+            <select multiple name="select1" id="select1" class="form-control whatever">
+                <option value="1">Lat</option>
+                <option value="2">Lon</option>
+                <option value="3">Depth</option>
+                <option value="4">1/Resist</option>
+                <option value="4">core length</option>
+            </select>
+{#            <img src="../Common/MultiSelect/img/switch.png">#}
+        </div>
+        <div class="col-3">
+            <p>Input fields to match</p>
+            <select multiple name="select2" id="select2" class="form-control whatever">
+                <option value="guess">SampID</option>
+            </select>
+        </div>
+        <div class="col-3">
+            <p>Database fields to match</p>
+            <select multiple name="select3" id="select3" class="form-control whatever">
+                <option value="guess">Sample_ID</option>
+            </select>
+        </div>
+        <div class="col-3">
+{#            <img src="../Common/MultiSelect/img/switch.png">#}
+            <p>Available database fields</p>
+            <select multiple name="select4" id="select4" class="form-control whatever">
+                <option value="1">Latitude</option>
+                <option value="2">Longitude</option>
+                <option value="3">Depth</option>
+                <option value="4">Conductivity</option>
+                <option value="4">Sulfide</option>
+            </select>
+        </div>
+    </div>
+    <button type="submit" name="submit" value="Submit" class="btn btn-success mt-2" onclick="selectAll();">go</button>
+    </form>
+
+
+
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+    function selectAll()
+    {
+        jQuery('[name="select3"] option').prop('selected', true);
+        jQuery('[name="select2"] option').prop('selected', true);
+        {#selectBox = document.getElementById("someId");#}
+        {##}
+        {#for (var i = 0; i < selectBox.options.length; i++)#}
+        {#{#}
+        {#     selectBox.options[i].selected = true;#}
+        {# }#}
+    }
+    </script>
+
+    <script type='text/javascript'>
+        $(window).on('load', function(){
+            $('#select1').click(function(){
+            $('#select1 option:selected').appendTo('#select2');
+        });
+
+        $('#select2').click(function(){
+            $('#select2 option:selected').appendTo('#select1');
+        });
+
+        $('#select3').click(function(){
+            $('#select3 option:selected').appendTo('#select4');
+        });
+
+        $('#select4').click(function(){
+            $('#select4 option:selected').appendTo('#select3');
+        });
+        });
+    </script>
+{% endblock %}
