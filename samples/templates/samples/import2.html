@@ -4,6 +4,17 @@
 
 {% block content %}
 
+    {% if errors %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-danger">
+                    <strong>There was an error with your mapping, please review and resubmit.</strong>
+                    <strong>The error message is: {{ errors }}</strong>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="row">
         <div class="col-9 mx-auto">
 
@@ -26,42 +37,74 @@
     <form method="POST" enctype="multipart/form-data"> {% csrf_token %}
     <div class="row">
         <div class="col-3">
-{#            <input type="text" name="sometext">#}
             <p>Available Input CSV fields</p>
-            <select multiple name="select1" id="select1" class="form-control whatever">
-                <option value="1">Lat</option>
-                <option value="2">Lon</option>
-                <option value="3">Depth</option>
-                <option value="4">1/Resist</option>
-                <option value="4">core length</option>
-            </select>
-{#            <img src="../Common/MultiSelect/img/switch.png">#}
         </div>
         <div class="col-3">
             <p>Input fields to match</p>
-            <select multiple name="select2" id="select2" class="form-control whatever">
-                <option value="guess">SampID</option>
-            </select>
         </div>
         <div class="col-3">
             <p>Database fields to match</p>
-            <select multiple name="select3" id="select3" class="form-control whatever">
-                <option value="guess">Sample_ID</option>
-            </select>
         </div>
         <div class="col-3">
 {#            <img src="../Common/MultiSelect/img/switch.png">#}
             <p>Available database fields</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-3">
+{#            <input type="text" name="sometext">#}
+
+            <select multiple name="select1" id="select1" class="form-control whatever">
+                {% for input_item in input_list %}
+                    <option value="{{ input_item }}">{{ input_item }}</option>
+                {% endfor %}
+            </select>
+{#            <img src="../Common/MultiSelect/img/switch.png">#}
+        </div>
+        <div class="col-3">
+            <select multiple name="select2" id="select2" class="form-control whatever">
+                {% for input_guess in input_match %}
+                    <option value="{{ input_guess }}">{{ input_guess }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-3">
+            <select multiple name="select3" id="select3" class="form-control whatever">
+                {% for output_guess in output_match %}
+                    <option value="{{ output_guess }}">{{ output_guess }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-3">
             <select multiple name="select4" id="select4" class="form-control whatever">
-                <option value="1">Latitude</option>
-                <option value="2">Longitude</option>
-                <option value="3">Depth</option>
-                <option value="4">Conductivity</option>
-                <option value="4">Sulfide</option>
+                {% for output_item in model_list %}
+                    <option value="{{ output_item }}">{{ output_item }}</option>
+                {% endfor %}
             </select>
         </div>
     </div>
-    <button type="submit" name="submit" value="Submit" class="btn btn-success mt-2" onclick="selectAll();">go</button>
+        <div class="row mt-2">
+        <div class="col-3">
+            {% if not input_list %}
+                <div class="alert alert-warning">
+                    <p>Warning: empty list obtained from server. Are all fields accounted for in column 3?</p>
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-3">
+        </div>
+        <div class="col-3">
+        </div>
+        <div class="col-3">
+{#            <img src="../Common/MultiSelect/img/switch.png">#}
+            {% if not model_list %}
+                <div class="alert alert-warning">
+                    <p>Warning: empty list obtained from server. Are all fields accounted for in column 3?</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <button type="submit" name="submit" value="Submit" class="btn btn-success mt-2" onclick="selectAll();">Submit mapping</button>
     </form>
 
 

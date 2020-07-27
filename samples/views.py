@@ -23,6 +23,7 @@ from .tables import SampleTable
 #     template_name = 'samples/index.html'
 #     samples = Sample.objects.all()
 #     return render(request, 'samples/index.html', locals())
+from .utils import matchup_fieldnames, mapping_sanity_check
 
 
 class SampleListView(FilterView, SingleTableView):
@@ -80,6 +81,7 @@ def csv_import(request):
     return render(request, 'samples/import.html')
 
 def csv_import2(request):
+    context = {}
     if request.method == 'POST':
         print(request.POST)
         if 'myfile' in request.FILES:
@@ -94,12 +96,63 @@ def csv_import2(request):
             print(dict(request.session))
 
             # get fields in file and fields available in database, try to match them up. Give 4 lists to the template
+            with open(filepath, 'r') as f:
+                reader = csv.DictReader(f)
+                input_list = reader.fieldnames
 
-            render(request, 'samples/import2.html')
-        elif 'some_kind_of_form_response' in (data := request.POST.copy()):
+
+            form = SampleForm()
+            form_field_classes = tuple((field_name, form.fields[field_name].widget.__class__) for field_name in form.fields)
+            model_forms = [pair[0] for pair in form_field_classes]
+
+            # TODO add attempt of matching-up here to save user time
+            input_match, output_match = matchup_fieldnames(input_list, model_forms)
+            for x in input_match:
+                input_list.remove(x)
+            for x in output_match:
+                model_forms.remove(x)
+            context["input_list"] = input_list
+            context["input_match"] = input_match
+            context["output_match"] = output_match
+            context["model_list"] = model_forms
+            context["upload_filename"] = request.session['upload_filename']
+            return render(request, 'samples/import2.html', context)
+        elif 'select2' in (data := request.POST.copy()) and 'select3' in (data := request.POST.copy()):
+            print(data.getlist("select2"))
+            valid, error_msg = mapping_sanity_check(data.getlist("select2"),
+                                                    data.getlist("select3"),
+                                                    request.session['upload_filepath'])
+            if valid:
+                pass
+            else:
+                with open(request.session['upload_filepath'], 'r') as f:
+                    reader = csv.DictReader(f)
+                    input_list = reader.fieldnames
+                form = SampleForm()
+                form_field_classes = tuple(
+                    (field_name, form.fields[field_name].widget.__class__) for field_name in form.fields)
+                model_forms = [pair[0] for pair in form_field_classes]
+
+                for x in data.getlist("select2"):
+                    input_list.remove(x)
+                for x in data.getlist("select3"):
+                    model_forms.remove(x)
+                context["errors"] = error_msg
+                context["input_list"] = input_list
+                context["input_match"] = data.getlist("select2")
+                context["output_match"] = data.getlist("select3")
+                context["model_list"] = model_forms
+                context["upload_filename"] = request.session['upload_filename']
+
+                return render(request, 'samples/import2.html', context)
+
             # start import of mapping with data, check for overlapping ids, etc
-            pass
+            # check validity with common sense first, if validity fails send back errors and display in an if block,
+            # like this https://stackoverflow.com/questions/14647723/django-forms-if-not-valid-show-form-with-error-message
+
+            return HttpResponseBadRequest("This isn't implemented yet")
         else:
             # return 400
-            return HttpResponseBadRequest()
-    return render(request, 'samples/import2.html')
+            return HttpResponseBadRequest("Error: Bad request. If you are seeing this page, your form data did not "
+                                          "send properly. Please contact webmaster")
+    return render(request, 'samples/import2.html', context)
