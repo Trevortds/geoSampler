@@ -9,42 +9,23 @@ from django.db.models import F
 from django.db.models.signals import pre_save
 
 SOIL_TYPE_CHOICES = (
+    ('clay_blue_gray', 'Clay (blue-gray)'),
+    ('clay_stone', 'Clay/Stone'),
     ('clay', 'Clay'),
-    ('silty_clay', 'Silty Clay'),
     ('silt', 'Silt'),
     ('clean_sand', 'Clean Sand')
 )
 
-TEXTURE_CHOICES = (
-    ('fine', 'Fine'),
-    ('fine_coarse', 'Fine-coarse'),
-    ('granular_fine', 'Granular Fine'),
-    ('med_fine', 'Med Fine'),
-    ('med_fine_coarse', 'Med Fine-coarse'),
-    ('coarse', 'Coarse'),
-    ('very_fine', 'Very Fine'),
-)
 
-COLOR_CHOICES = (
-    ('dark_brwn', 'Dark Brown'),
-    ('med_brwn', 'Med Brown'),
-    ('redish_brwn', 'Redish Brown'),
-    ('brown_beige', 'Brown Beige'),
-    ('light_brown', 'Light Brown'),
-    ('tan', 'Tan'),
-    ('dark_light_brown', 'Dark brown/light brown'),
-    ('med_brown_tan', 'Med Brown/Tan'),
-    ('brown_grey', 'Brown/grey'),
-    ('brown', 'Brown'),
-    ('beige', 'Beige'),
-    ('pink', 'pink'),
-)
+# TODO make color and texture searchable like text.
 
-SULFIDE_CHOICES = (
+
+PRES_ABS_CHOICES = (
     ('present', 'Present'),
     ('absent', 'Absent'),
-    ('trace', 'Trace'),
 )
+
+# TODO round inputs with wrong precision, don't throw errors
 
 #
 # class SampleManager(models.Manager):
@@ -57,15 +38,14 @@ class Sample(models.Model):
     sample_no = models.CharField(max_length=120, unique=True)
     job_no = models.CharField(max_length=120)
     job_name = models.CharField(max_length=120)
-    latitude = models.DecimalField(decimal_places=6, max_digits=20)
-    longitude = models.DecimalField(decimal_places=6, max_digits=20)
-    depth = models.DecimalField(decimal_places=2, max_digits=5)
+    latitude = models.DecimalField(decimal_places=9, max_digits=20)
+    longitude = models.DecimalField(decimal_places=9, max_digits=20)
+    depth = models.DecimalField(verbose_name="Depth (feet)", decimal_places=2, max_digits=5)
     soil_type = models.CharField(max_length=32, choices=SOIL_TYPE_CHOICES)
-    texture = models.CharField(max_length=32, choices=TEXTURE_CHOICES)
-    color = models.CharField(max_length=32, choices=COLOR_CHOICES)
-    ph = models.DecimalField(decimal_places=2, max_digits=10)
-    redox_potential = models.DecimalField(decimal_places=2, max_digits=10, validators=[MinValueValidator(
-        decimal.Decimal('0.001'))])
+    texture = models.CharField(max_length=32)
+    color = models.CharField(max_length=32)
+    ph = models.DecimalField(verbose_name="pH", decimal_places=2, max_digits=10)
+    redox_potential = models.DecimalField(decimal_places=2, max_digits=10)
     conductivity = models.DecimalField(decimal_places=3, max_digits=10)
     chloride = models.DecimalField(decimal_places=2, max_digits=10)
     sulfate = models.DecimalField(decimal_places=1, max_digits=10)
@@ -73,8 +53,8 @@ class Sample(models.Model):
     resistivity_as_collected = models.DecimalField(decimal_places=2, max_digits=10, validators=[MinValueValidator(
         decimal.Decimal('0.001'))])
     resistivity_saturated = models.DecimalField(decimal_places=2, max_digits=10)
-    carbonate = models.BooleanField()
-    sulfide = models.CharField(max_length=32, choices=SULFIDE_CHOICES)
+    carbonate = models.CharField(max_length=32, choices=PRES_ABS_CHOICES)
+    sulfide = models.CharField(max_length=32, choices=PRES_ABS_CHOICES)
     moisture_content = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     awwa = models.CharField(max_length=32, blank=True, null=True)
@@ -118,7 +98,7 @@ class Sample(models.Model):
             return 3.5
         elif self.redox_potential > 0:
             return 4
-        elif self.redox_potential < 0:
+        elif self.redox_potential <= 0:
             return 5
         elif self.redox_potential > -1000:
             return "Type In Results"

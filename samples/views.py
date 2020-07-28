@@ -98,6 +98,7 @@ def csv_import2(request):
             # get fields in file and fields available in database, try to match them up. Give 4 lists to the template
             with open(filepath, 'r') as f:
                 reader = csv.DictReader(f)
+                # TODO catch errors here
                 input_list = reader.fieldnames
 
 
@@ -105,7 +106,6 @@ def csv_import2(request):
             form_field_classes = tuple((field_name, form.fields[field_name].widget.__class__) for field_name in form.fields)
             model_forms = [pair[0] for pair in form_field_classes]
 
-            # TODO add attempt of matching-up here to save user time
             input_match, output_match = matchup_fieldnames(input_list, model_forms)
             for x in input_match:
                 input_list.remove(x)
@@ -123,6 +123,8 @@ def csv_import2(request):
                                                     data.getlist("select3"),
                                                     request.session['upload_filepath'])
             if valid:
+                # TODO Send user to a new view, where they can confirm using the first row as an example
+                #   That view may need to have a loading spinner
                 pass
             else:
                 with open(request.session['upload_filepath'], 'r') as f:

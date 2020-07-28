@@ -8,6 +8,7 @@ from .models import Sample
 class SampleResource(resources.ModelResource):
     class Meta:
         model = Sample
+        import_id_fields = ["sample_no"]
 
 
 class SampleAdmin(admin.ModelAdmin):
