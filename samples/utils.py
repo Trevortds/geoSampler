@@ -28,7 +28,6 @@ def matchup_fieldnames(input_list, model_list):
 
 
 def mapping_sanity_check(inputmap, outputmap, filename):
-    # TODO implement this, check length first, then field types, and do a dry run of data load with import/export
     if len(inputmap) != len(outputmap):
         return False, "Length of field mappings do not match"
     with open(filename, "r") as f:
