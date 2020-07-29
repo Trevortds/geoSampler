@@ -13,7 +13,7 @@ SOIL_TYPE_CHOICES = (
     ('clay_stone', 'Clay/Stone'),
     ('clay', 'Clay'),
     ('silt', 'Silt'),
-    ('clean_sand', 'Clean Sand')
+    ('sand', 'Sand')
 )
 
 

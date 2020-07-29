@@ -4,6 +4,7 @@ import random
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.utils.http import is_safe_url
 from django_filters.views import FilterView
 from django_tables2 import SingleTableView
@@ -23,7 +24,7 @@ from .tables import SampleTable
 #     template_name = 'samples/index.html'
 #     samples = Sample.objects.all()
 #     return render(request, 'samples/index.html', locals())
-from .utils import matchup_fieldnames, mapping_sanity_check
+from .utils import matchup_fieldnames, mapping_sanity_check, start_processing
 
 
 class SampleListView(FilterView, SingleTableView):
@@ -125,7 +126,11 @@ def csv_import2(request):
             if valid:
                 # TODO Send user to a new view, where they can confirm using the first row as an example
                 #   That view may need to have a loading spinner
-                pass
+                request.session["input_match"] = data.getlist("select2")
+                request.session["output_match"] = data.getlist("select3")
+                request.session["io_message"] = error_msg
+                return redirect(reverse("samples:confirm_upload"))
+
             else:
                 with open(request.session['upload_filepath'], 'r') as f:
                     reader = csv.DictReader(f)
@@ -158,3 +163,23 @@ def csv_import2(request):
             return HttpResponseBadRequest("Error: Bad request. If you are seeing this page, your form data did not "
                                           "send properly. Please contact webmaster")
     return render(request, 'samples/import2.html', context)
+
+def confirm_upload(request):
+    if request.method == 'GET':
+
+        context = {
+            "filename" : request.session['upload_filename'],
+            "input_match" : request.session["input_match"],
+            "output_match": request.session["output_match"],
+            "match_pairs": zip(request.session["input_match"], request.session["output_match"]),
+            "io_message": request.session["io_message"],
+        }
+        return render(request, 'samples/import_confirmation.html', context)
+
+    if request.method == 'POST':
+        start_processing(request.session["input_match"],
+                         request.session["output_match"],
+                         request.session['upload_filepath'])
+        request.session.flush()
+
+        return redirect('samples:index')
