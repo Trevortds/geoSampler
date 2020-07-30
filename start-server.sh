@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # start-server.sh
 
+if [ -z $POSTGIS_PORT ] ; then
+  POSTGIS_PORT=5432
+fi
+
 echo "waiting for server to start"
-while !</dev/tcp/db/5432; do sleep 1; done;
+while !</dev/tcp/$POSTGIS_HOST/$POSTGIS_PORT; do sleep 1; done;
 
 echo "Apply database migrations"
 (cd geo; python manage.py migrate auth)
@@ -12,7 +16,7 @@ if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ] &&
 #    (cd geo; python manage.py createsuperuser --no-input --email $DJANGO_SURERUSER_EMAIL \
 #            --username $DJANGO_SUPERUSER_USERNAME)
     echo "Creating superuser"
-    (cd geo; python ./manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('$DJANGO_SUPERUSER_USERNAME', '$DJANGO_SURERUSER_EMAIL', '$DJANGO_SUPERUSER_PASSWORD')")
+    (cd geo; python ./manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('$DJANGO_SUPERUSER_USERNAME', '$DJANGO_SUPERUSER_EMAIL', '$DJANGO_SUPERUSER_PASSWORD')")
 fi
 
 echo "collect static files"

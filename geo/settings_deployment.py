@@ -33,7 +33,7 @@ POSTGIS_NAME = os.environ.get("POSTGIS_NAME") or "geodjango"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["geo.trevor-sullivan.tech", "localhost"]
+ALLOWED_HOSTS = ["geo.trevor-sullivan.tech", "geoprod.trevor-sullivan.tech", "localhost"]
 
 ADMINS = [("Trevor", 'trevor@trevor-sullivan.tech')] # TODO setup email so this works
 
