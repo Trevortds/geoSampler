@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install nginx vim -y --no-install-recommends
 COPY nginx.default /etc/nginx/sites-available/default
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
+#RUN ln -sf /var/log/stdout /var/log/nginx/access.log \
+#    && ln -sf /var/log/stdout /var/log/nginx/error.log
 
 # Install necessary dependencies for spatialite (don't need this when switched to postgres)
 RUN apt-cache search mod_spatialite
@@ -24,6 +26,9 @@ WORKDIR /opt/app
 RUN pip install -r requirements.txt --cache-dir /opt/app/pip_cache
 RUN chown -R www-data:www-data /opt/app
 RUN chmod +x /opt/app/start-server.sh
+
+ARG DJANGO_SETTINGS_MODULE=geo.settings_deployment
+
 
 # start server
 EXPOSE 80
