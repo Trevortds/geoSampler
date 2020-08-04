@@ -19,7 +19,7 @@ RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/pip_cache
 RUN mkdir -p /opt/app/geo
 COPY requirements.txt start-server.sh /opt/app/
-COPY .pip_cache /opt/app/pip_cache/
+#COPY .pip_cache /opt/app/pip_cache/
 RUN true
 COPY . /opt/app/geo/
 WORKDIR /opt/app
