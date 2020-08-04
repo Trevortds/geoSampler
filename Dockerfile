@@ -22,12 +22,13 @@ COPY requirements.txt start-server.sh /opt/app/
 #COPY .pip_cache /opt/app/pip_cache/
 RUN true
 COPY . /opt/app/geo/
+RUN rm /opt/app/geo/geo/settings.py
 WORKDIR /opt/app
 RUN pip install -r requirements.txt --cache-dir /opt/app/pip_cache
 RUN chown -R www-data:www-data /opt/app
 RUN chmod +x /opt/app/start-server.sh
 
-ARG DJANGO_SETTINGS_MODULE=geo.settings_deployment
+ENV DJANGO_SETTINGS_MODULE=geo.settings_deployment
 
 
 # start server
