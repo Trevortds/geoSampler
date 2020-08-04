@@ -8,6 +8,7 @@ class SampleForm(forms.ModelForm):
         fields = "__all__"
         exclude = [
             "awwa",
+            "wssc",
             "point",
         ]
 

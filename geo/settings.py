@@ -1,4 +1,4 @@
 
 
 
-from .settings_deployment import *
+from .settings_dev import *

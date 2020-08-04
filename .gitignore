@@ -2,6 +2,8 @@ geo/secrets.py
 environment.yml
 static_cdn/
 static_cdn/**
+docker-compose-deploy.yml
+
 docker-compose.yml
 
 # Created by https://www.toptal.com/developers/gitignore/api/pycharm+all,django,python
