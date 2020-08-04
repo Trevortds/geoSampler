@@ -1,4 +1,4 @@
-import decimal
+from decimal import Decimal
 
 from django.contrib.gis.db import models
 
@@ -60,7 +60,7 @@ class Sample(models.Model):
     salinity                 = models.DecimalField(verbose_name="Salinity (%)", decimal_places=2, max_digits=10)
     resistivity_as_collected = models.DecimalField(verbose_name="Resistivity As Collected (KΩ-cm)", decimal_places=2,
                                                    max_digits=10,
-                                                   validators=[MinValueValidator(decimal.Decimal('0.001'))])
+                                                   validators=[MinValueValidator(Decimal('0.001'))])
     resistivity_saturated    = models.DecimalField(verbose_name="Resistivity Saturated (KΩ-cm)", decimal_places=2,
                                                    max_digits=10)
     carbonate                = models.CharField(verbose_name="Carbonate", max_length=32, choices=PRES_ABS_CHOICES)
@@ -84,8 +84,7 @@ class Sample(models.Model):
 
     def get_wssc_rating(self):
         """=IF(H3>15.5,"Severe",IF(H3>9.9,"Appreciable",IF(H3>4.9,"Moderate",IF(H3>=0,"Mild",IF(H3>-1,"Type in Results")))))"""
-        score = decimal.Decimal(self.get_ph_score()) + decimal.Decimal(self.get_chloride_content()) + \
-                decimal.Decimal(self.get_redox_potential()) + decimal.Decimal(self.soil_rating())
+        score = self.get_wssc_ph_score() + self.get_chloride_content() + self.get_redox_potential() + self.soil_rating()
         if score > 15:
             return "Severe"
         elif score > 9.9:
@@ -98,21 +97,23 @@ class Sample(models.Model):
             raise ValueError("Invalid WSSC score")
 
 
-    def get_ph_score(self):
+    def get_wssc_ph_score(self):
         """=IF($Results.J5>0, "5", IF($Results.J5>1.9, "3", IF($Results.J5>3.9, "0", IF($Results.J5>8.5, "0",
         IF($Results.J5>-1, "Type in Results", “Error”))))))))))"""
         # I think the above formula is actually wrong, but it is reproduced exactly below.
-        # TODO throw error if ph < 0 or > 15
-        if self.ph > 0:
-            return 5
-        elif self.ph > 1.9:
-            return 3
-        elif self.ph > 3.9:
-            return 0
+        if self.ph > 14:
+            raise ValueError("Invalid pH: higher than 15")
         elif self.ph > 8.5:
             return 0
-        elif self.ph > -1:
-            raise ValueError("Invalid pH")
+        elif self.ph > 3.9:
+            return 0
+        elif self.ph > 1.9:
+            return 3
+        elif self.ph >= 0:
+            return 5
+        else:
+            raise ValueError("Invalid pH: less than 0")
+
 
     def get_chloride_content(self):
         """=IF($Results.M5>1000, "10", IF($Results.M5>499, "6", IF($Results.M5>199, "4", IF($Results.M5>49, "2",
@@ -153,26 +154,34 @@ class Sample(models.Model):
             return 0
 
 
-    @property
     def get_awwa_rating(self):
         # =IF(H8>9.9,"Severe",IF(H8>1,"Moderate",IF(H8>=0,"Mild",IF(H8>-1,"Type in Results"))))
-        print(self.ph)
-        print(self.get_redox())
-        print(self.get_resistivity_simplified())
-        print(self.get_sulfide_simplified())
-        print(self.sulfide)
-        # TODO self.ph should be a formula
-        score = decimal.Decimal(self.ph) + decimal.Decimal(self.get_redox()) + \
-                decimal.Decimal(self.get_resistivity_simplified()) + decimal.Decimal(self.get_sulfide_simplified())
+        score = self.get_awwa_ph_score() + self.get_redox() + self.get_resistivity_simplified() + \
+                self.get_sulfide_simplified()
 
         if score > 9.9:
             return "Severe"
         elif score > 1:
             return "Moderate"
-        elif score > 0:
+        elif score >= 0:
             return "Mild"
         else:
-            return "Type In results"
+            raise ValueError("Invalid AWWA Score")
+
+    def get_awwa_ph_score(self):
+        # =IF($Results.J2>8.5,"3",IF($Results.J2>4,"0",IF($Results.J2>2,"3",IF($Results.J2>0,"5",IF($Results.J2>-1,"Type in Results","Error")))))
+        if self.ph > 14:
+            raise ValueError("Invalid pH: greater than 15")
+        elif self.ph > 8.5:
+            return 3
+        elif self.ph > 4:
+            return 0
+        elif self.ph > 2:
+            return 3
+        elif self.ph >= 0:
+            return 5
+        else:
+            raise ValueError("Invalid pH: less than 0")
 
     def get_redox(self):
         # =IF($Results.K10>100.1,"0",IF($Results.K10>50,"3.5",IF($Results.K10>0,"4",IF($Results.K10<0,"5",IF($Results.K10>-1000,"Type in Results")))))
@@ -184,8 +193,8 @@ class Sample(models.Model):
             return 4
         elif self.redox_potential <= 0:
             return 5
-        elif self.redox_potential > -1000:
-            return "Type In Results"
+        else:
+            raise ValueError("Invalid Redox Potential")
 
     def get_redox_potential(self):
         # =IF($Results.K10>100.1,"0",IF($Results.K10>50,"3.5",IF($Results.K10>0,"4",IF($Results.K10<0,"5",IF($Results.K10>-1000,"Type in Results")))))
@@ -195,8 +204,8 @@ class Sample(models.Model):
             return 4
         elif self.redox_potential <= 0:
             return 5
-        elif self.redox_potential > -1000:
-            return "Type In Results"
+        else:
+            raise ValueError("Invalid Redox Potential")
 
     def get_resistivity_simplified(self):
         # =IF($Results.P8>3, "0", IF($Results.P8>2.5, "1", IF($Results.P8>2.1, "2", IF($Results.P8>1.8, "5", IF($Results.P8>=1.5, "8",IF($Results.P8>0, "10",IF($Results.P8>-1, "Type in Results",“Error”))))))))))))))
@@ -210,10 +219,10 @@ class Sample(models.Model):
             return 5
         elif self.resistivity_as_collected > 1.5:
             return 8
-        elif self.resistivity_as_collected > 0:
+        elif self.resistivity_as_collected >= 0:
             return 10
-        elif self.resistivity_as_collected > -1:
-            return "Type In Result"
+        else:
+            raise ValueError("Invalid Resistivity As Collected")
 
     def get_sulfide_simplified(self):
         # =IF($Results.S8="Present",3.5,IF($Results.S8="Trace",2,IF($Results.S8="Absent",0,IF($Results.S8=0,"Type in Results"))))
@@ -227,7 +236,7 @@ class Sample(models.Model):
 
 def pre_save_sample_reciever(sender, instance, *args, **kwargs):
     # TODO catch valueerror
-    instance.awwa = instance.get_awwa_rating
+    instance.awwa = instance.get_awwa_rating()
     instance.wssc = instance.get_wssc_rating()
     instance.point = instance.get_point()
     # TODO figure out why point isn't getting added
