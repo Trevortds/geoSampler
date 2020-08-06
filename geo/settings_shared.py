@@ -44,9 +44,12 @@ INSTALLED_APPS = [
     'import_export',
     'django_filters',
     'bootstrap3',
+    'guardian',
+    'jobs',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+GUARDIAN_RENDER_403 = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -57,6 +60,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend', # this is default
+    'guardian.backends.ObjectPermissionBackend',
+)
+
 
 LOGOUT_REDIRECT_URL = "/login/"
 ROOT_URLCONF = 'geo.urls'

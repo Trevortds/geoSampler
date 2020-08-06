@@ -72,7 +72,7 @@ class Sample(models.Model):
     wssc                     = models.CharField(verbose_name="WSSC Rating", max_length=32, blank=True, null=True)
 
     # mpoly = models.MultiPolygonField()
-    point                    = models.PointField(blank=True, null=True)
+    point                    = models.PointField(geography=True, blank=True, null=True)
 
     # objects = SampleManager()
 
