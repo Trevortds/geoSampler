@@ -8,4 +8,4 @@ django-import-export==2.3.0
 django-filter==2.3.0
 django-bootstrap3==14.1.0
 psycopg2-binary==2.8.5
-
+django-guardian==2.3.0

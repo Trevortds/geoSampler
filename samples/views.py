@@ -40,9 +40,12 @@ class SampleListView(FilterView, SingleTableView):
         context = super().get_context_data(**kwargs)
         # Add in a QuerySet of all the books
         # context['book_list'] = Book.objects.all()
-        context['object_list'] = Sample.objects.get_samples_for_user(self.request.user)
+        print(context)
+        context['object_list'] = [s for s in context['object_list']
+                                  if s in Sample.objects.get_samples_for_user(self.request.user)]
         context['sample_list'] = context['object_list']
         context['table'] = SampleTable(context['sample_list'])
+        self.request.session["filter_request"] = context['filter'].request.GET
         print(context)
         print(self.request.user)
         print(self.request.user.username)
@@ -75,8 +78,10 @@ def newSampleForm(request):
 
 
 def csv_export(request):
+    print(request.session.get('filter_request'))
+    f = SampleFilter(request.session.get('filter_request'), queryset=Sample.objects.get_samples_for_user(request.user))
     sample_resource = SampleResource()
-    dataset = sample_resource.export()  # TODO add a filter here by including queryset as arg to export
+    dataset = sample_resource.export(queryset=f.qs) 
     response = HttpResponse(dataset.csv, content_type='text/csv')
     response["Content-Disposition"] = 'attachment; filename="samples.csv'
     return response
