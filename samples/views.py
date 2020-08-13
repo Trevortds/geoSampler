@@ -35,6 +35,22 @@ class SampleListView(FilterView, SingleTableView):
     filterset_class = SampleFilter
     # filter = SampleFilter(queryset=Sample.objects.all())
 
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        # Add in a QuerySet of all the books
+        # context['book_list'] = Book.objects.all()
+        context['object_list'] = Sample.objects.get_samples_for_user(self.request.user)
+        context['sample_list'] = context['object_list']
+        context['table'] = SampleTable(context['sample_list'])
+        print(context)
+        print(self.request.user)
+        print(self.request.user.username)
+        return context
+
+def sample_list_view(request):
+    pass
+
 
 def newSampleForm(request):
     form = SampleForm(request.POST or None)
@@ -103,10 +119,11 @@ def csv_import2(request):
                 input_list = reader.fieldnames
 
 
-            form = SampleForm()
-            form_field_classes = tuple((field_name, form.fields[field_name].widget.__class__) for field_name in form.fields)
-            model_forms = [pair[0] for pair in form_field_classes]
-
+            # form = SampleForm()
+            resource = SampleResource()
+            # form_field_classes = tuple((field_name, form.fields[field_name].widget.__class__) for field_name in form.fields)
+            # model_forms = [pair[0] for pair in form_field_classes]
+            model_forms = list(resource.fields.keys())
             input_match, output_match = matchup_fieldnames(input_list, model_forms)
             for x in input_match:
                 input_list.remove(x)
@@ -135,10 +152,7 @@ def csv_import2(request):
                 with open(request.session['upload_filepath'], 'r') as f:
                     reader = csv.DictReader(f)
                     input_list = reader.fieldnames
-                form = SampleForm()
-                form_field_classes = tuple(
-                    (field_name, form.fields[field_name].widget.__class__) for field_name in form.fields)
-                model_forms = [pair[0] for pair in form_field_classes]
+                model_forms = list(SampleResource().fields.keys())
 
                 for x in data.getlist("select2"):
                     input_list.remove(x)

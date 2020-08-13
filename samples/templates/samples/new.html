@@ -5,6 +5,17 @@
 {% block content %}
 
     <div class="row">
+        <div class="col-2 ml-auto mr-0">
+            <form action="{% url "jobs:new" %}?banana=yes&next={{request.build_absolute_uri}}" method="get">
+                <input type="hidden" name="next" value="{{ request.build_absolute_uri }}">
+                <button type="submit" class="btn btn-primary">Click here to add a new job</button>
+            </form>
+        </div>
+        <div class="col-1 mr-0">
+        </div>
+    </div>
+
+    <div class="row">
 
         <div class="col-9 mx-auto">
 {#            #TODO add a map that updates as the user fills out long and lat#}

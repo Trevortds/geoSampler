@@ -58,7 +58,8 @@ def register_page(request):
         username = form.cleaned_data.get("username")
         password = form.cleaned_data.get("password")
         email = form.cleaned_data.get("email")
-        new_user = User.objects.create_user(username, email, password)
+        new_user = User.objects.create_user(username, email, password,
+                                            backend='django.contrib.auth.backends.ModelBackend')
         print(new_user)
         login(request, new_user)
         return redirect("/")

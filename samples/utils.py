@@ -47,7 +47,7 @@ def mapping_sanity_check(inputmap, outputmap, filename):
         dataset = tablib.Dataset(list(transformed_firstline.values()), headers=list(transformed_firstline.keys()))
         result = sample_resource.import_data(dataset, dry_run=True)
         if result.has_errors():
-            return False, str(result.row_errors())
+            return False, result.row_errors()
         for row in reader:
             transformed_row = {csv_to_model_map[k]: row[k] for k in inputmap}
             transformed_row, errors = normalize_rowdict(transformed_row)
@@ -57,7 +57,7 @@ def mapping_sanity_check(inputmap, outputmap, filename):
 
     result = sample_resource.import_data(dataset, dry_run=True)
     if result.has_errors():
-        return False, str(result.row_errors())
+        return False, result.row_errors()
 
     return True, result.totals
 

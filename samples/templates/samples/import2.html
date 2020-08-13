@@ -10,6 +10,10 @@
                 <div class="alert alert-danger">
                     <strong>There was an error with your mapping, please review and resubmit.</strong>
                     <strong>The error message is: {{ errors }}</strong>
+                    {% for error in errors %}
+                        <p>Row # {{ error.0 }}</p>
+                        <p>{{ error.1.0.error }} </p>
+                    {% endfor %}
                 </div>
             </div>
         </div>

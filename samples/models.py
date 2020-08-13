@@ -7,6 +7,9 @@ from django.contrib.gis.geos import Point
 from django.core.validators import MinValueValidator
 from django.db.models import F
 from django.db.models.signals import pre_save
+from guardian.shortcuts import get_objects_for_user
+
+from jobs.models import Job
 
 SOIL_TYPE_CHOICES = (
     ('clay_blue_gray', 'Clay (blue-gray)'),
@@ -27,12 +30,15 @@ PRES_ABS_CHOICES = (
 
 # TODO round inputs with wrong precision, don't throw errors
 
-#
-# class SampleManager(models.Manager):
-#     # idea from https://stackoverflow.com/questions/17682567/how-to-add-a-calculated-field-to-a-django-model
-#     def get_queryset(self):
-#         """ Overrides models.Manager method """
-#         qs = super(SampleManager, self).get_queryset().annotate(awwa=F('get_awwa_rating'))
+
+class SampleManager(models.Manager):
+    # idea from https://stackoverflow.com/questions/17682567/how-to-add-a-calculated-field-to-a-django-model
+    # def get_queryset(self):
+    #     """ Overrides models.Manager method """
+    #     qs = super(SampleManager, self).get_queryset().annotate(awwa=F('get_awwa_rating'))
+    def get_samples_for_user(self, user):
+        job_qs = get_objects_for_user(user, 'jobs.view_this_job')
+        return super(SampleManager, self).get_queryset().filter(job__in=job_qs)
 
 # TODO add ground elevation (nullable)
 # TODO add date (nullable)?
@@ -44,6 +50,7 @@ PRES_ABS_CHOICES = (
 
 class Sample(models.Model):
     sample_no                = models.CharField(verbose_name="Sample #", max_length=120, unique=True)
+    job                      = models.ForeignKey(Job, on_delete=models.CASCADE)
     job_no                   = models.CharField(verbose_name="Job #", max_length=120)
     job_name                 = models.CharField(verbose_name="Job Name", max_length=120)
     latitude                 = models.DecimalField(verbose_name="Latitude", decimal_places=9, max_digits=20)
@@ -74,7 +81,7 @@ class Sample(models.Model):
     # mpoly = models.MultiPolygonField()
     point                    = models.PointField(geography=True, blank=True, null=True)
 
-    # objects = SampleManager()
+    objects = SampleManager()
 
     def __str__(self):
         return self.sample_no + " " + self.job_name
@@ -239,8 +246,9 @@ def pre_save_sample_reciever(sender, instance, *args, **kwargs):
     instance.awwa = instance.get_awwa_rating()
     instance.wssc = instance.get_wssc_rating()
     instance.point = instance.get_point()
-    # TODO figure out why point isn't getting added
-    #   it is in the localhost server
+    if instance.job_id is None:
+        instance.job_id = instance.job.job_no
+        instance.job_title = instance.job.job_name
 
 
 pre_save.connect(pre_save_sample_reciever, sender=Sample)

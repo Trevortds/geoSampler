@@ -62,11 +62,11 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend', # this is default
+    'django.contrib.auth.backends.ModelBackend',  # this is default
     'guardian.backends.ObjectPermissionBackend',
 )
 
-
+LOGIN_URL = "/login/"
 LOGOUT_REDIRECT_URL = "/login/"
 ROOT_URLCONF = 'geo.urls'
 
