@@ -81,7 +81,7 @@ def csv_export(request):
     print(request.session.get('filter_request'))
     f = SampleFilter(request.session.get('filter_request'), queryset=Sample.objects.get_samples_for_user(request.user))
     sample_resource = SampleResource()
-    dataset = sample_resource.export(queryset=f.qs) 
+    dataset = sample_resource.export(queryset=f.qs)
     response = HttpResponse(dataset.csv, content_type='text/csv')
     response["Content-Disposition"] = 'attachment; filename="samples.csv'
     return response
