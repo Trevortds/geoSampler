@@ -4,6 +4,17 @@
 
 {% block content %}
 
+    {% if error %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-danger">
+                    <strong>There was an error with your uploaded file, is it a csv?</strong>
+
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="row">
 
         <div class="col-9 mx-auto">

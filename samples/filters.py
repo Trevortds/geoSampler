@@ -18,4 +18,4 @@ class SampleFilter(django_filters.FilterSet):
     class Meta:
         model = Sample
         exclude = ["point"]
-        fields = ["sample_no", "job_no", "job_name", "depth"]
+        fields = ["sample_no", "job__job_no", "job_name", "depth"]

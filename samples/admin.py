@@ -18,16 +18,16 @@ class JobWidget(ForeignKeyWidget):
                 job_no=value,
                 defaults={
                     'job_no': row.get('job_no'),
-                    'job_name': row.get('job_name'),
+                    # 'job_name': row.get('job_name'),
                 }
             )
         return obj
 
 
 class SampleResource(resources.ModelResource):
-    job = fields.Field(
+    job_no = fields.Field(
         column_name='job_no',
-        attribute='job',
+        attribute='job_no',
         widget=JobWidget(Job, 'job_no')
     )
     class Meta:
@@ -35,7 +35,6 @@ class SampleResource(resources.ModelResource):
         import_id_fields = ["sample_no"]
 
         fields = ('sample_no',
-                  'job',
                   'job_no',
                   'job_name',
                   'latitude',

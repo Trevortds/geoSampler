@@ -13,4 +13,4 @@ class Job(models.Model):
         )
 
     def __str__(self):
-        return f"{self.job_name} - {self.job_no}"
+        return f"{self.job_name} - {self.job_no}" if self.job_name else f"{self.job_no}"

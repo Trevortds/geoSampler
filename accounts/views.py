@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, get_user_model, logout
+# from django.contrib.auth.models import User
 from .forms import LoginForm, RegisterForm, GuestForm
 from django.utils.http import is_safe_url
 
@@ -58,9 +59,8 @@ def register_page(request):
         username = form.cleaned_data.get("username")
         password = form.cleaned_data.get("password")
         email = form.cleaned_data.get("email")
-        new_user = User.objects.create_user(username, email, password,
-                                            backend='django.contrib.auth.backends.ModelBackend')
+        new_user = User.objects.create_user(username, email, password)
         print(new_user)
-        login(request, new_user)
+        login(request, new_user, backend='django.contrib.auth.backends.ModelBackend')
         return redirect("/")
     return render(request, "accounts/register.html", context)

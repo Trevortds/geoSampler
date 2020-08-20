@@ -7,7 +7,7 @@ class SampleTable(tables.Table):
         model = Sample
         template_name = "django_tables2/bootstrap.html"
         fields = ("sample_no",
-                  "job_no",
+                  "job__job_no",
                   "job_name",
                   "latitude",
                   "longitude",

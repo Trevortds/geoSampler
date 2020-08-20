@@ -72,6 +72,8 @@ def normalize_rowdict(row):
     soil_type_dict['Silty Sand'] = "silt"
     soil_type_dict['Clean Sand'] = "sand"
     "string".lower()
+    for k in list(soil_type_dict.keys()):
+        soil_type_dict[k.lower()] = soil_type_dict[k]
     if "soil_type" in row:
         if row["soil_type"] in soil_type_dict:
             row["soil_type"] = soil_type_dict[row["soil_type"]]

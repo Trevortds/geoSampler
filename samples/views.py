@@ -2,6 +2,7 @@ import csv
 import random
 
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -55,6 +56,7 @@ def sample_list_view(request):
     pass
 
 
+@login_required
 def newSampleForm(request):
     form = SampleForm(request.POST or None)
     context = {
@@ -76,7 +78,7 @@ def newSampleForm(request):
 
     return render(request, 'samples/new.html', context)
 
-
+@login_required
 def csv_export(request):
     print(request.session.get('filter_request'))
     f = SampleFilter(request.session.get('filter_request'), queryset=Sample.objects.get_samples_for_user(request.user))
@@ -86,7 +88,7 @@ def csv_export(request):
     response["Content-Disposition"] = 'attachment; filename="samples.csv'
     return response
 
-
+@login_required
 def csv_import(request):
     if request.method == 'POST':
         # this should never run, but leaving it here in case i decide to go back to the tablib method
@@ -99,9 +101,12 @@ def csv_import(request):
 
         if not result.has_errors():
             sample_resource.import_data(dataset, dry_run=False)  # Actually import now
+    context = {}
+    if 'error' in request.GET:
+        context = {'error': request.GET['error']}
+    return render(request, 'samples/import.html', context=context)
 
-    return render(request, 'samples/import.html')
-
+@login_required
 def csv_import2(request):
     context = {}
     if request.method == 'POST':
@@ -121,7 +126,10 @@ def csv_import2(request):
             with open(filepath, 'r') as f:
                 reader = csv.DictReader(f)
                 # TODO catch errors here
-                input_list = reader.fieldnames
+                try:
+                    input_list = reader.fieldnames
+                except:
+                    return redirect(f"{reverse('samples:upload_csv')}?error='Invalid Document'")
 
 
             # form = SampleForm()
@@ -183,6 +191,7 @@ def csv_import2(request):
                                           "send properly. Please contact webmaster")
     return render(request, 'samples/import2.html', context)
 
+@login_required
 def confirm_upload(request):
     if request.method == 'GET':
 
@@ -199,6 +208,11 @@ def confirm_upload(request):
         start_processing(request.session["input_match"],
                          request.session["output_match"],
                          request.session['upload_filepath'])
-        request.session.flush()
+        request.session.delete("input_match")
+        request.session.delete("output_match")
+        request.session.delete("upload_filepath")
+        request.session.delete("filename")
+        request.session.delete("io_message")
+
 
         return redirect('samples:index')
