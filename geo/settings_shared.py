@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'bootstrap3',
     'guardian',
     'jobs',
+    'leaflet',
+    'djgeojson',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

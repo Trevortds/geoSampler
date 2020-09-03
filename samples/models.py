@@ -100,6 +100,11 @@ class Sample(models.Model):
     def get_point(self):
         return Point(float(self.latitude), float(self.longitude))
 
+    @property
+    def geom(self):
+        """I don't think this should be necessary, but I can't figure out how to make leaflet look at "point" """
+        return Point(self.point.y, self.point.x)
+
     def get_wssc_rating(self):
         """=IF(H3>15.5,"Severe",IF(H3>9.9,"Appreciable",IF(H3>4.9,"Moderate",IF(H3>=0,"Mild",IF(H3>-1,
         "Type in Results")))))"""

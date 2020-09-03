@@ -1,12 +1,59 @@
 {% extends "base.html" %}
 {% load bootstrap3 %}
+{% load leaflet_tags %}
+{% load geojson_tags %}
+{% block styles %}
+    {% leaflet_css %}
+{% endblock %}
+{% block scripts %}
+    {% leaflet_js %}
+
+    <script type="text/javascript">
+      var collection = {{ object_list|geojsonfeature:"sample_no,job_name,awwa"|safe }};
+
+      function getFeaturesInView(map) {
+          var features = [];
+          map.eachLayer( function(layer) {
+            if(layer instanceof L.Marker) {
+              if(map.getBounds().contains(layer.getLatLng())) {
+                features.push(layer.feature);
+              }
+            }
+          });
+          return features;
+      }
+
+      function map_init(map, options) {
+          {#L.geoJSON(collection).addTo(map);#}
+
+          const group = L.geoJson(collection, {
+           style: function (feature) {
+               return {}; // style properties here
+           },
+           onEachFeature: function (feature, layer) {
+               layer.bindPopup(feature.properties.sample_no + "</br>" + feature.properties.job_name + "</br>" +  feature.properties.awwa);
+           }
+          }).addTo(map);
+
+          {#var markerArray = getFeaturesInView(map)#}
+          {#var markerArray = [];#}
+          {#// markerArray.push(L.marker([51.505, -0.09]));#}
+          {#// ...#}
+          {#var group = L.featureGroup(markerArray).addTo(map);#}
+          map.fitBounds(group.getBounds());
+      }
+    </script>
+{% endblock %}
+
 {% block content %}
 
     <div class="row">
 
         <div class="col-11 mx-auto">
-            <div class="alert alert-secondary" role="alert" style="min-height: 200px">
+            <div class="alert alert-secondary" role="alert" style="min-height: 300px">
                 Map will go here
+                {% leaflet_map "samples" callback="window.map_init" %}
+
             </div>
         </div>
 
