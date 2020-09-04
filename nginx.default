@@ -10,4 +10,7 @@ server {
     location /static {
         alias /opt/app/geo/static_cdn/static_root/;
     }
+    location /media {
+        alias /opt/app/geo/static_cdn/media_root/;
+    }
 }
