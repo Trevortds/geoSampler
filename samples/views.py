@@ -1,12 +1,15 @@
 import csv
+import logging
 import random
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse, HttpResponseBadRequest, Http404
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.http import is_safe_url
+from django.views.generic import DetailView
 from django_filters.views import FilterView
 from django_tables2 import SingleTableView
 from tablib import Dataset
@@ -18,6 +21,8 @@ from .forms import SampleForm
 from .models import Sample
 from .tables import SampleTable
 # Create your views here.
+
+log = logging.getLogger(__name__)
 
 # def index(request):
 #     model = Sample
@@ -46,14 +51,75 @@ class SampleListView(FilterView, SingleTableView):
                                   if s in Sample.objects.get_samples_for_user(self.request.user)]
         context['sample_list'] = context['object_list']
         context['table'] = SampleTable(context['sample_list'])
+        context['title'] = "Samples"
         self.request.session["filter_request"] = context['filter'].request.GET
         print(context)
         print(self.request.user)
-        print(self.request.user.username)
         return context
 
 def sample_list_view(request):
     pass
+
+
+class SampleDetailView(DetailView):
+    """Depreciated, keeping around for good measure"""
+    queryset = Sample.objects.all()
+    template_name = "samples/detail.html"
+
+    # might not need this
+    # def get_context_data(self, *args, **kwargs):
+    #     context = super(SampleDetailView, self).get_context_data(*args, **kwargs)
+    #
+    #     # print(context)
+    #     return context
+    #
+    def get_object(self, *args, **kwargs):
+        request = self.request
+        pk = self.kwargs.get("pk")
+
+        sample_object = Sample.objects.get_by_id(pk)
+
+        if sample_object is None:
+            raise Http404("Sample does not exist")
+
+        if not request.user.has_perm("jobs.view_this_job", sample_object.job):
+            raise PermissionDenied("You do not have permission to view this page")
+        self.extra_context = {"title": sample_object.sample_no}
+        return sample_object
+
+
+class SampleDetailSlugView(DetailView):
+    template_name = "samples/detail.html"
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(SampleDetailSlugView, self).get_context_data(*args, **kwargs)
+        context["form"] = SampleForm(instance=context["object"])
+        context["job_no"] = context["object"].job.job_no
+        print(context)
+        return context
+
+    def get_object(self, *args, **kwargs):
+        request = self.request
+        slug = self.kwargs.get("sample_no")
+        # prod_object = get_object_or_404(Product, slug=slug)
+        try:
+            sample_object = Sample.objects.get(sample_no=slug)
+        except Sample.DoesNotExist:
+            raise Http404("Not Found")
+        except Sample.MultipleObjectsReturned:
+            queryset = Sample.objects.filter(sample_no=slug)
+            sample_object = queryset.first
+        except:
+            raise Http404("Something went wrong.")
+
+        if sample_object is None:
+            raise Http404("Sample does not exist")
+
+        if not request.user.has_perm("jobs.view_this_job", sample_object.job):
+            raise PermissionDenied("You do not have permission to view this page")
+
+        self.extra_context = {"title": sample_object.sample_no}
+        return sample_object
 
 
 @login_required
@@ -78,6 +144,7 @@ def newSampleForm(request):
 
     return render(request, 'samples/new.html', context)
 
+
 @login_required
 def csv_export(request):
     print(request.session.get('filter_request'))
@@ -87,6 +154,7 @@ def csv_export(request):
     response = HttpResponse(dataset.csv, content_type='text/csv')
     response["Content-Disposition"] = 'attachment; filename="samples.csv'
     return response
+
 
 @login_required
 def csv_import(request):
@@ -105,6 +173,7 @@ def csv_import(request):
     if 'error' in request.GET:
         context = {'error': request.GET['error']}
     return render(request, 'samples/import.html', context=context)
+
 
 @login_required
 def csv_import2(request):
@@ -125,7 +194,6 @@ def csv_import2(request):
             # get fields in file and fields available in database, try to match them up. Give 4 lists to the template
             with open(filepath, 'r') as f:
                 reader = csv.DictReader(f)
-                # TODO catch errors here
                 try:
                     input_list = reader.fieldnames
                 except:
@@ -154,8 +222,7 @@ def csv_import2(request):
                                                     data.getlist("select3"),
                                                     request.session['upload_filepath'])
             if valid:
-                # TODO Send user to a new view, where they can confirm using the first row as an example
-                #   That view may need to have a loading spinner
+                # Send user to new view where they can confirm this mapping
                 request.session["input_match"] = data.getlist("select2")
                 request.session["output_match"] = data.getlist("select3")
                 request.session["io_message"] = error_msg
@@ -187,9 +254,11 @@ def csv_import2(request):
             return HttpResponseBadRequest("This isn't implemented yet")
         else:
             # return 400
+            log.info("Bad request")
             return HttpResponseBadRequest("Error: Bad request. If you are seeing this page, your form data did not "
                                           "send properly. Please contact webmaster")
     return render(request, 'samples/import2.html', context)
+
 
 @login_required
 def confirm_upload(request):
@@ -216,3 +285,6 @@ def confirm_upload(request):
 
 
         return redirect('samples:index')
+
+def throw_an_error(request):
+    raise NotImplementedError('this is a test error')

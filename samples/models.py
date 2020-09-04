@@ -1,4 +1,6 @@
+import os
 from decimal import Decimal
+import random
 
 from django.contrib.gis.db import models
 
@@ -7,6 +9,7 @@ from django.contrib.gis.geos import Point
 from django.core.validators import MinValueValidator
 from django.db.models import F
 from django.db.models.signals import pre_save
+from django.urls import reverse
 from guardian.shortcuts import get_objects_for_user
 
 from jobs.models import Job
@@ -30,6 +33,19 @@ PRES_ABS_CHOICES = (
 
 # TODO round inputs with wrong precision, don't throw errors
 
+def get_filename_ext(filename):
+    base_name = os.path.basename(filename)
+    name, ext = os.path.splitext(base_name)
+    return name, ext
+
+
+def upload_image_path(instance, filename):
+    print(instance)
+    print(filename)
+    new_filename = random.randint(1, 912345912345)
+    name, ext = get_filename_ext(filename)
+    return f"samples/{new_filename}/{new_filename}{ext}"
+
 
 class SampleManager(models.Manager):
     # idea from https://stackoverflow.com/questions/17682567/how-to-add-a-calculated-field-to-a-django-model
@@ -40,9 +56,13 @@ class SampleManager(models.Manager):
         job_qs = get_objects_for_user(user, 'jobs.view_this_job')
         return super(SampleManager, self).get_queryset().filter(job__in=job_qs)
 
-# TODO add ground elevation (nullable)
+    def get_by_id(self, pk):
+        qs = self.get_queryset().filter(pk=pk)
+        if qs.count() == 1:
+            return qs.first()
+        return None
+
 # TODO add date (nullable)?
-# TODO user auth by job
 # possibly making another table for field data
 # and another for stray current
 # and another for the CIS (close interval survey)
@@ -51,10 +71,11 @@ class SampleManager(models.Manager):
 class Sample(models.Model):
     sample_no                = models.CharField(verbose_name="Sample #", max_length=120, unique=True)
     job                      = models.ForeignKey(Job, on_delete=models.CASCADE)
-    # job_no                   = models.CharField(verbose_name="Job #", max_length=120)
     job_name                 = models.CharField(verbose_name="Job Name", max_length=120)
     latitude                 = models.DecimalField(verbose_name="Latitude", decimal_places=9, max_digits=20)
     longitude                = models.DecimalField(verbose_name="Longitude", decimal_places=9, max_digits=20)
+    altitude = models.DecimalField(verbose_name="Altitude (ft above sea level)", decimal_places=2, max_digits=10,
+                                   blank=True, null=True)
     depth                    = models.DecimalField(verbose_name="Depth (feet)", decimal_places=2, max_digits=5,
                                                    null=True, blank=True)
     soil_type                = models.CharField(verbose_name="Soil Type", max_length=32, choices=SOIL_TYPE_CHOICES,
@@ -79,6 +100,8 @@ class Sample(models.Model):
                                                    null=True, blank=True)
     resistivity_saturated    = models.DecimalField(verbose_name="Resistivity Saturated (KΩ-cm)", decimal_places=2,
                                                    max_digits=10, null=True, blank=True)
+    field_resistivity        = models.DecimalField(verbose_name="Field Resistivity", decimal_places=5, max_digits=15,
+                                                   blank=True, null=True)
     carbonate                = models.CharField(verbose_name="Carbonate", max_length=32, choices=PRES_ABS_CHOICES,
                                                 null=True, blank=True)
     sulfide                  = models.CharField(verbose_name="Sulfide", max_length=32, choices=PRES_ABS_CHOICES,
@@ -89,7 +112,12 @@ class Sample(models.Model):
     awwa                     = models.CharField(verbose_name="AWWA Rating", max_length=32, blank=True, null=True)
     wssc                     = models.CharField(verbose_name="WSSC Rating", max_length=32, blank=True, null=True)
 
-    # mpoly = models.MultiPolygonField()
+    # new additions 2020-09-03
+    stray_current_graph = models.ImageField(upload_to=upload_image_path, null=True, blank=True)
+    resistivity_chart = models.ImageField(upload_to=upload_image_path, null=True, blank=True)
+
+
+
     point                    = models.PointField(geography=True, blank=True, null=True)
 
     objects = SampleManager()
@@ -98,7 +126,13 @@ class Sample(models.Model):
         return self.sample_no + " " + self.job_name
 
     def get_point(self):
+        """used by frontend map, which expects lat ang long backwards"""
         return Point(float(self.latitude), float(self.longitude))
+
+    # @property
+    def get_absolute_url(self):
+        # f"/products/{self.slug}"
+        return reverse("samples:detail", kwargs={"sample_no": self.sample_no})
 
     @property
     def geom(self):
@@ -264,7 +298,6 @@ class Sample(models.Model):
 
 
 def pre_save_sample_reciever(sender, instance, *args, **kwargs):
-    # TODO catch valueerror
     try:
         instance.awwa = instance.get_awwa_rating()
     except (ValueError, TypeError):
@@ -274,7 +307,7 @@ def pre_save_sample_reciever(sender, instance, *args, **kwargs):
     except (ValueError, TypeError):
         print("failed to calculat wssc")
     instance.point = instance.get_point()
-    # if instance.job_id is None:  # TODO figure out what to do with this if, if it's even neded
+    # if instance.job_id is None:
     #     instance.job_id = instance.job.job_no
     #     instance.job_title = instance.job.job_name
 

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load static %}
+{% load leaflet_tags %}
+{% load geojson_tags %}
+
+{% block styles %}
+    {% leaflet_css %}
+    <style>
+    #samples_map{
+            width: 100px;
+            height:500px;
+            min-height: 100%;
+            min-width: 100%;
+            display: block;
+    }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    {% leaflet_js %}
+
+    <script type="text/javascript">
+          var sample = {{ object|geojsonfeature|safe }};
+
+          function getFeaturesInView(map) {
+              var features = [];
+              map.eachLayer( function(layer) {
+                if(layer instanceof L.Marker) {
+                  if(map.getBounds().contains(layer.getLatLng())) {
+                    features.push(layer.feature);
+                  }
+                }
+              });
+              return features;
+          }
+
+          function map_init(map, options) {
+
+              var sample_markers = L.layerGroup()
+              const group = L.geoJson(sample, {
+               style: function (feature) {
+                   return {}; // style properties here
+               },
+               onEachFeature: function (feature, layer) {
+                   sample_markers.addLayer(layer)
+               }
+              }).addTo(map);
+
+              {#var markerArray = getFeaturesInView(map)#}
+              {#var markerArray = [];#}
+              {#// markerArray.push(L.marker([51.505, -0.09]));#}
+              {#// ...#}
+              {#var group = L.featureGroup(markerArray).addTo(map);#}
+              const mapbox_token = "pk.eyJ1IjoidHJldm9ydGRzIiwiYSI6ImNrZW5kY2JqOTAwcHQyeG5pbGV3eXY2eHkifQ.W0RkBr1tHl7pcSgx59KpaA"
+              var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+                '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>'
+              var mapboxUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token='+mapbox_token;
+              var grayscale = L.tileLayer(mapboxUrl, {id: 'mapbox/light-v9', tileSize: 512, zoomOffset: -1, attribution: mbAttr}),
+                  streets   = L.tileLayer(mapboxUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr});
+
+              grayscale.addTo(map);
+              streets.addTo(map);
+              sample_markers.addTo(map);
+
+              map.fitBounds(group.getBounds());
+
+
+              var baseMaps ={"Grayscale": grayscale, "Streets": streets};
+              var overlayMaps = {
+                  "Samples": sample_markers,
+              };
+              L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+      }
+    </script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+<div class="col-9 mx-auto">
+
+    <div class="row">
+        <div class="col-sm-6">
+            <h3>{{ object.sample_no }} </h3>
+            <br>
+            {% if object.stray_current_graph %}
+                <img src="{{ object.stray_current_graph.url }}" class="img-fluid">
+            {% endif %}
+            {% if object.resistivity_chart %}
+                <img src="{{ object.resistivity_chart.url }}" class="img-fluid">
+            {% endif %}
+
+            {% leaflet_map "sample_map" callback="window.map_init" %}
+
+            {{ object.comments|linebreaks }} <br>
+
+        </div>
+        <div class="col-12 col-md-6">
+            <h3>{{ object.sample_no }} </h3>
+            <table class="table">
+                {% for field in form %}
+                    <tr>
+                        {% if field.label == "Job" %}
+                            <td>{{ field.label }}</td>
+                            <td>{{ job_no|default_if_none:"" }}</td>
+                        {% else %}
+                            <td>{{ field.label }}</td>
+                            <td>{{ field.value|default_if_none:"" }}</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </table>
+
+            {% if user.is_authenticated and user.is_staff %}
+                <a href="{% url 'admin:samples_sample_change' object.id %}"><button class="btn-primary" >Go to edit page</button></a>
+            {% endif %}
+
+
+        </div>
+    </div>
+</div>
+</div>
+
+{% endblock %}

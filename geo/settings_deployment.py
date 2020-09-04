@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+
+from django.utils.log import DEFAULT_LOGGING
+
 from .settings_shared import *
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
@@ -21,10 +24,10 @@ POSTGIS_PASSWORD = os.environ.get("POSTGIS_PASSWORD")
 if not POSTGIS_PASSWORD:
     from .secrets import POSTGIS_PASSWORD
 
-POSTGIS_HOST = os.environ.get("POSTGIS_HOST") or "172.17.0.2"
+POSTGIS_HOST = os.environ.get("POSTGIS_HOST") or "localhost"
 POSTGIS_PORT = os.environ.get("POSTGIS_PORT") or ""
-POSTGIS_USER = os.environ.get("POSTGIS_USER") or "geodjango"
-POSTGIS_NAME = os.environ.get("POSTGIS_NAME") or "geodjango"
+POSTGIS_USER = os.environ.get("POSTGIS_USER") or "postgres"
+POSTGIS_NAME = os.environ.get("POSTGIS_NAME") or "postgres"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -35,9 +38,10 @@ DEBUG = False
 
 ALLOWED_HOSTS = ["geo.trevor-sullivan.tech", "geoprod.trevor-sullivan.tech", "localhost"]
 
-ADMINS = [("Trevor", 'trevor@trevor-sullivan.tech')] # TODO setup email so this works
+ADMINS = [("Trevor", 'trevor@trevor-sullivan.tech')]
+MANAGERS = ADMINS
 
-SERVER_EMAIL = 'django@trevor-sullivan.tech'
+# SERVER_EMAIL = 'django@trevor-sullivan.tech'
 
 # Application definition
 
@@ -57,29 +61,21 @@ DATABASES = {
 }
 
 
-# TODO set up email logs, then delete this whole block
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': True,
-#     'formatters': {
-#         'verbose': {
-#             'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s'
-#         }
-#     },
-#     'handlers': {
-#         'gunicorn': {
-#             'level': 'DEBUG',
-#             'class': 'logging.handlers.RotatingFileHandler',
-#             'formatter': 'verbose',
-#             'filename': '/opt/djangoprojects/reports/bin/gunicorn.errors',
-#             'maxBytes': 1024 * 1024 * 100,  # 100 mb
-#         }
-#     },
-#     'loggers': {
-#         'gunicorn.errors': {
-#             'level': 'DEBUG',
-#             'handlers': ['gunicorn'],
-#             'propagate': True,
-#         },
-#     }
-# }
+EMAIL_BACKEND= 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'trevordjangoapp@gmail.com'
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+if not EMAIL_HOST_PASSWORD:
+    from .secrets import EMAIL_HOST_PASSWORD
+
+DEFAULT_LOGGING['handlers']['console']['filters'] = [] # disables default console logging, allowing gunicorn to see them
+#might regret this, look here for more https://stackoverflow.com/questions/38131255/logging-and-email-not-working-for-django-for-500
+DEFAULT_LOGGING['loggers'][''] = {
+    'handlers': ['console', 'mail_admins'],
+    'level': 'INFO',
+    'propagate': True
+}
+
+

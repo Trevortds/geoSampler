@@ -1,46 +1,133 @@
 {% extends "base.html" %}
 {% load bootstrap3 %}
 {% load leaflet_tags %}
+{% load static %}
 {% load geojson_tags %}
 {% block styles %}
     {% leaflet_css %}
+    <style>
+    #samples_map{
+            width: 100px;
+            height:500px;
+            min-height: 100%;
+            min-width: 100%;
+            display: block;
+    }
+    </style>
 {% endblock %}
 {% block scripts %}
+    <script src="{% static "js/heatmap.min.js" %}"></script>
     {% leaflet_js %}
+    <script src="{% static "js/leaflet-heatmap.js" %}"></script>
 
     <script type="text/javascript">
-      var collection = {{ object_list|geojsonfeature:"sample_no,job_name,awwa"|safe }};
+          var collection = {{ object_list|geojsonfeature:"sample_no,job_name,awwa,field_resistivity"|safe }};
 
-      function getFeaturesInView(map) {
-          var features = [];
-          map.eachLayer( function(layer) {
-            if(layer instanceof L.Marker) {
-              if(map.getBounds().contains(layer.getLatLng())) {
-                features.push(layer.feature);
+          function getFeaturesInView(map) {
+              var features = [];
+              map.eachLayer( function(layer) {
+                if(layer instanceof L.Marker) {
+                  if(map.getBounds().contains(layer.getLatLng())) {
+                    features.push(layer.feature);
+                  }
+                }
+              });
+              return features;
+          }
+
+          function map_init(map, options) {
+
+              var heatmapData = {
+                  max: -16000000000000000,
+                  min: 100000000000000000,
+                  data: []
+              };
+
+              var sample_markers = L.layerGroup()
+              const group = L.geoJson(collection, {
+               style: function (feature) {
+                   return {}; // style properties here
+               },
+               onEachFeature: function (feature, layer) {
+                   layer.bindPopup(feature.properties.sample_no + "</br>" + feature.properties.job_name + "</br>" +
+                       feature.properties.awwa + "</br>" + feature.properties.field_resistivity);
+                   sample_markers.addLayer(layer)
+                   if (feature.properties.field_resistivity !== null && feature.properties.field_resistivity !== "") {
+                       heatmapData["data"].push({
+                           lat: feature.geometry.coordinates[1],
+                           lng: feature.geometry.coordinates[0],
+                           count: 1 / Number(feature.properties.field_resistivity)
+                       })
+                       if (feature.properties.field_resistivity > Number(heatmapData["max"])) {
+                           heatmapData["max"] = 1 / Number(feature.properties.field_resistivity);
+                       }
+                       if (feature.properties.field_resistivity < Number(heatmapData["min"])) {
+                           heatmapData["min"] = 1 / Number(feature.properties.field_resistivity);
+                       }
+                   }
+               }
+              });
+
+              var normalize = false
+              var point;
+              if (normalize) {
+                  for (point of heatmapData["data"]) {
+                      point["count"] = (point["count"] - heatmapData["min"]) / (heatmapData["max"] - heatmapData["min"])
+                  }
+                  heatmapData["max"] = 1
+                  heatmapData["min"] = 0
               }
-            }
-          });
-          return features;
-      }
 
-      function map_init(map, options) {
-          {#L.geoJSON(collection).addTo(map);#}
+              {#var markerArray = getFeaturesInView(map)#}
+              {#var markerArray = [];#}
+              {#// markerArray.push(L.marker([51.505, -0.09]));#}
+              {#// ...#}
+              {#var group = L.featureGroup(markerArray).addTo(map);#}
+              const mapbox_token = "pk.eyJ1IjoidHJldm9ydGRzIiwiYSI6ImNrZW5kY2JqOTAwcHQyeG5pbGV3eXY2eHkifQ.W0RkBr1tHl7pcSgx59KpaA"
+              var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+                '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>'
+              var mapboxUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token='+mapbox_token;
+              var grayscale = L.tileLayer(mapboxUrl, {id: 'mapbox/light-v9', tileSize: 512, zoomOffset: -1, attribution: mbAttr}),
+                  streets   = L.tileLayer(mapboxUrl, {id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr});
 
-          const group = L.geoJson(collection, {
-           style: function (feature) {
-               return {}; // style properties here
-           },
-           onEachFeature: function (feature, layer) {
-               layer.bindPopup(feature.properties.sample_no + "</br>" + feature.properties.job_name + "</br>" +  feature.properties.awwa);
-           }
-          }).addTo(map);
+              grayscale.addTo(map);
+              streets.addTo(map);
+              sample_markers.addTo(map);
 
-          {#var markerArray = getFeaturesInView(map)#}
-          {#var markerArray = [];#}
-          {#// markerArray.push(L.marker([51.505, -0.09]));#}
-          {#// ...#}
-          {#var group = L.featureGroup(markerArray).addTo(map);#}
-          map.fitBounds(group.getBounds());
+              map.fitBounds(group.getBounds());
+
+
+              var cfg = {
+                  // radius should be small ONLY if scaleRadius is true (or small radius is intended)
+                  // if scaleRadius is false it will be the constant radius used in pixels
+                  "radius": .01,
+                  "maxOpacity": .8,
+                  // scales the radius based on map zoom
+                  "scaleRadius": true,
+                  // if set to false the heatmap uses the global maximum for colorization
+                  // if activated: uses the data maximum within the current map boundaries
+                  //   (there will always be a red spot with useLocalExtremas true)
+                  "useLocalExtrema": false,
+                  // How hard the gradients are, default 0.85
+                  "blur": 0.96,
+                  // which field name in your data represents the latitude - default "lat"
+                  latField: 'lat',
+                  // which field name in your data represents the longitude - default "lng"
+                  lngField: 'lng',
+                  // which field name in your data represents the data value - default "value"
+                  valueField: 'count'
+              };
+              var heatmapLayer = new HeatmapOverlay(cfg);
+              var baseMaps ={"Grayscale": grayscale, "Streets": streets};
+              var overlayMaps = {
+                  "Samples": sample_markers,
+                  "Heatmap": heatmapLayer
+              };
+              heatmapLayer.addTo(map);
+              L.control.layers(baseMaps, overlayMaps).addTo(map);
+              heatmapLayer.setData(heatmapData)
+
       }
     </script>
 {% endblock %}
@@ -51,8 +138,7 @@
 
         <div class="col-11 mx-auto">
             <div class="alert alert-secondary" role="alert" style="min-height: 300px">
-                Map will go here
-                {% leaflet_map "samples" callback="window.map_init" %}
+                {% leaflet_map "samples_map" callback="window.map_init" %}
 
             </div>
         </div>
