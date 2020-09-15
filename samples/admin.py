@@ -27,7 +27,7 @@ class JobWidget(ForeignKeyWidget):
 class SampleResource(resources.ModelResource):
     job_no = fields.Field(
         column_name='job_no',
-        attribute='job_no',
+        attribute='job',
         widget=JobWidget(Job, 'job_no')
     )
     class Meta:
