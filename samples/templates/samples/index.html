@@ -43,6 +43,28 @@
                   data: []
               };
 
+              function cap(val, cap=25000) {
+                  if (val > cap){
+                      return cap
+                  } else {
+                      return val
+                  }
+              }
+
+              function logBase(value, base) {
+                  return Math.log(value) / Math.log(base);
+              }
+
+              function resistivityScore(val){
+                  {#return 1/val;#}
+
+                  return 1-logBase(cap(val), 25000) + 0.000001;
+              }
+
+
+
+
+
               var sample_markers = L.layerGroup()
               const group = L.geoJson(collection, {
                style: function (feature) {
@@ -50,23 +72,40 @@
                },
                onEachFeature: function (feature, layer) {
                    layer.bindPopup(feature.properties.sample_no + "</br>" + feature.properties.job_name + "</br>" +
-                       feature.properties.awwa + "</br>" + feature.properties.field_resistivity);
+                       feature.properties.awwa + "</br>" + feature.properties.field_resistivity +
+                       "</br>" + resistivityScore(Number(feature.properties.field_resistivity)));
                    sample_markers.addLayer(layer)
                    if (feature.properties.field_resistivity !== null && feature.properties.field_resistivity !== "") {
+                       var resistScore = resistivityScore(Number(feature.properties.field_resistivity));
                        heatmapData["data"].push({
                            lat: feature.geometry.coordinates[1],
                            lng: feature.geometry.coordinates[0],
-                           count: 1 / Number(feature.properties.field_resistivity)
+                           count: resistScore
+                           {#radius: .1 + resistScore#}
                        })
-                       if (feature.properties.field_resistivity > Number(heatmapData["max"])) {
-                           heatmapData["max"] = 1 / Number(feature.properties.field_resistivity);
+                       if (resistScore > Number(heatmapData["max"])) {
+                           heatmapData["max"] = resistScore;
                        }
-                       if (feature.properties.field_resistivity < Number(heatmapData["min"])) {
-                           heatmapData["min"] = 1 / Number(feature.properties.field_resistivity);
+                       if (resistScore < Number(heatmapData["min"])) {
+                           heatmapData["min"] = resistScore;
                        }
                    }
                }
               });
+
+              var hardMin = true
+              if (hardMin) {
+                  {#heatmapData["max"] = resistivityScore(0.1);#}
+                  heatmapData["max"] = "1";
+                  heatmapData["min"] = "0";
+              }
+
+              var reverse = false
+              if (reverse) {
+                  for (point of heatmapData["data"]) {
+                      point["count"] = heatmapData["max"] - point["count"]
+                  }
+              }
 
               var normalize = false
               var point;
@@ -77,6 +116,7 @@
                   heatmapData["max"] = 1
                   heatmapData["min"] = 0
               }
+              console.log(heatmapData)
 
               {#var markerArray = getFeaturesInView(map)#}
               {#var markerArray = [];#}
@@ -101,8 +141,9 @@
               var cfg = {
                   // radius should be small ONLY if scaleRadius is true (or small radius is intended)
                   // if scaleRadius is false it will be the constant radius used in pixels
-                  "radius": .01,
-                  "maxOpacity": .8,
+                  "radius": .0025,
+                  "maxOpacity": 1.0,
+                  "minOpacity": 0.5,
                   // scales the radius based on map zoom
                   "scaleRadius": true,
                   // if set to false the heatmap uses the global maximum for colorization
@@ -110,13 +151,24 @@
                   //   (there will always be a red spot with useLocalExtremas true)
                   "useLocalExtrema": false,
                   // How hard the gradients are, default 0.85
-                  "blur": 0.96,
+                  "blur": 0.90,
                   // which field name in your data represents the latitude - default "lat"
                   latField: 'lat',
                   // which field name in your data represents the longitude - default "lng"
                   lngField: 'lng',
                   // which field name in your data represents the data value - default "value"
-                  valueField: 'count'
+                  valueField: 'count',
+                  // { 0.25: "rgb(0,0,255)", 0.55: "rgb(0,255,0)", 0.85: "yellow", 1.0: "rgb(255,0,0)"},
+                  gradient: {
+                  {#  // enter n keys between 0 and 1 here#}
+                  {#  // for gradient color customization#}
+                      "0.0" : 'blue',
+                      "0.050": "rgb(0,255,0)",
+                      '0.090': "yellow",
+                      "0.16": "rgb(255,128,0)",
+                      "0.31": "red"
+
+                   }
               };
               var heatmapLayer = new HeatmapOverlay(cfg);
               var baseMaps ={"Grayscale": grayscale, "Streets": streets};
@@ -124,7 +176,10 @@
                   "Samples": sample_markers,
                   "Heatmap": heatmapLayer
               };
-              heatmapLayer.addTo(map);
+              setTimeout(function(){
+                    map.addLayer(heatmapLayer);
+              },500)
+              {#heatmapLayer.addTo(map);#}
               L.control.layers(baseMaps, overlayMaps).addTo(map);
               heatmapLayer.setData(heatmapData)
 
@@ -150,9 +205,11 @@
         <div class="col-11">
             <div class="row mb-3">
                 <div class="col-2 ml-auto">
+                    {% if request.user.is_staff %}
                     <form action="{% url 'samples:upload_csv' %}">
                         <button type="submit" class="btn btn-info">Upload new csv</button>
                     </form>
+                    {% endif %}
                 </div>
                 <div class="col-2 ml-auto">
                     <form action="{% url 'samples:download_csv' %}">
@@ -161,9 +218,11 @@
                 </div>
 
                 <div class="col-2">
+                    {% if request.user.is_staff %}
                     <form action="new/">
                         <button type="submit" class="btn btn-success">Add new row</button>
                     </form>
+                    {% endif %}
                 </div>
             </div>
         </div>

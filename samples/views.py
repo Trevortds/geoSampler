@@ -3,6 +3,7 @@ import logging
 import random
 
 from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, HttpResponseBadRequest, Http404
@@ -123,6 +124,7 @@ class SampleDetailSlugView(DetailView):
 
 
 @login_required
+@staff_member_required
 def newSampleForm(request):
     form = SampleForm(request.POST or None)
     context = {
@@ -157,6 +159,7 @@ def csv_export(request):
 
 
 @login_required
+@staff_member_required
 def csv_import(request):
     if request.method == 'POST':
         # this should never run, but leaving it here in case i decide to go back to the tablib method
@@ -176,6 +179,7 @@ def csv_import(request):
 
 
 @login_required
+@staff_member_required
 def csv_import2(request):
     context = {}
     if request.method == 'POST':
@@ -261,6 +265,7 @@ def csv_import2(request):
 
 
 @login_required
+@staff_member_required
 def confirm_upload(request):
     if request.method == 'GET':
 
