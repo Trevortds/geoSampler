@@ -1,5 +1,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import UserAttributeSimilarityValidator, MinimumLengthValidator, \
+    CommonPasswordValidator, NumericPasswordValidator, validate_password
+from django.contrib.auth.validators import UnicodeUsernameValidator
 
 User = get_user_model()
 
@@ -40,7 +43,7 @@ class RegisterForm(forms.Form):
                 "placeholder": "Username",
                 "id": "form_full_name",
                 }
-        )
+        ), validators=[UnicodeUsernameValidator()]
     )
 
     email = forms.EmailField(widget=forms.TextInput(
@@ -56,7 +59,7 @@ class RegisterForm(forms.Form):
                 "class": "form-control",
                 "placeholder": "Password",
                 "id": "form_full_name",
-                })
+                }),
     )
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput(attrs={
                 "class": "form-control",
@@ -85,4 +88,6 @@ class RegisterForm(forms.Form):
         password2 = self.cleaned_data.get("password2")
         if password != password2:
             raise forms.ValidationError("Passwords do not match")
+        if not validate_password(password):
+            raise forms.ValidationError("Invalid Password!")
         return data
