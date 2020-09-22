@@ -72,8 +72,7 @@
                },
                onEachFeature: function (feature, layer) {
                    layer.bindPopup(feature.properties.sample_no + "</br>" + feature.properties.job_name + "</br>" +
-                       feature.properties.awwa + "</br>" + feature.properties.field_resistivity +
-                       "</br>" + resistivityScore(Number(feature.properties.field_resistivity)));
+                       feature.properties.awwa + "</br>" + feature.properties.field_resistivity );
                    sample_markers.addLayer(layer)
                    if (feature.properties.field_resistivity !== null && feature.properties.field_resistivity !== "") {
                        var resistScore = resistivityScore(Number(feature.properties.field_resistivity));

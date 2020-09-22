@@ -92,7 +92,8 @@ class SampleDetailView(DetailView):
         if sample_object is None:
             raise Http404("Sample does not exist")
 
-        if not request.user.has_perm("jobs.view_this_job", sample_object.job):
+        if not (request.user.has_perm("jobs.view_this_job", sample_object.job) or
+                request.user.has_perm("jobs.view_this_job")):
             raise PermissionDenied("You do not have permission to view this page")
         self.extra_context = {"title": sample_object.sample_no}
         return sample_object
@@ -125,7 +126,8 @@ class SampleDetailSlugView(DetailView):
         if sample_object is None:
             raise Http404("Sample does not exist")
 
-        if not request.user.has_perm("jobs.view_this_job", sample_object.job):
+        if not (request.user.has_perm("jobs.view_this_job", sample_object.job) or
+                request.user.has_perm("jobs.view_this_job")):
             raise PermissionDenied("You do not have permission to view this page")
 
         self.extra_context = {"title": sample_object.sample_no}
