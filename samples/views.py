@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils.http import is_safe_url
 from django.views.generic import DetailView
 from django_filters.views import FilterView
-from django_tables2 import SingleTableView
+from django_tables2 import SingleTableView, LazyPaginator
 from tablib import Dataset
 
 from geo.utils import random_string_generator
@@ -38,9 +38,18 @@ class SampleListView(FilterView, SingleTableView):
     model = Sample
     table_class = SampleTable
     template_name = 'samples/index.html'
+    pagination_class = LazyPaginator
+    table_pagination = {"per_page": 20}
 
     filterset_class = SampleFilter
     # filter = SampleFilter(queryset=Sample.objects.all())
+
+    def get_queryset(self):
+        qs = super(SampleListView, self).get_queryset()
+        print(qs)
+        usersamples = Sample.objects.get_samples_for_user(self.request.user)
+        perm_qs = qs & usersamples  # set intersection
+        return perm_qs
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -48,10 +57,10 @@ class SampleListView(FilterView, SingleTableView):
         # Add in a QuerySet of all the books
         # context['book_list'] = Book.objects.all()
         print(context)
-        context['object_list'] = [s for s in context['object_list']
-                                  if s in Sample.objects.get_samples_for_user(self.request.user)]
-        context['sample_list'] = context['object_list']
-        context['table'] = SampleTable(context['sample_list'])
+        # context['object_list'] = [s for s in context['object_list']
+        #                           if s in Sample.objects.get_samples_for_user(self.request.user)]
+        # context['sample_list'] = context['object_list']
+        # context['table'] = SampleTable(context['sample_list'])
         context['title'] = "Samples"
         self.request.session["filter_request"] = context['filter'].request.GET
         print(context)
