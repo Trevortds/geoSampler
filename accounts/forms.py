@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.password_validation import UserAttributeSimilarityValidator, MinimumLengthValidator, \
     CommonPasswordValidator, NumericPasswordValidator, validate_password
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -88,6 +88,48 @@ class RegisterForm(forms.Form):
         password2 = self.cleaned_data.get("password2")
         if password != password2:
             raise forms.ValidationError("Passwords do not match")
-        if not validate_password(password):
-            raise forms.ValidationError("Invalid Password!")
+        validate_password(password)
+
+        return data
+
+
+class PasswordChangeForm(forms.Form):
+
+    old_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+                "class": "form-control",
+                "placeholder": "Password",
+                "id": "form_full_name",
+                }),
+    )
+
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+                "class": "form-control",
+                "placeholder": "Password",
+                "id": "form_full_name",
+                }),
+    )
+    password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput(attrs={
+                "class": "form-control",
+                "placeholder": "Password",
+                "id": "form_full_name",
+                }
+    ))
+
+    def __init__(self, *args, **kwargs):
+        self.username = kwargs.pop('username')
+        super(PasswordChangeForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        data = self.cleaned_data
+        user = authenticate(username=self.username, password=self.cleaned_data.get("old_password"))
+        if user is None:
+            raise forms.ValidationError("Old password does not match")
+        password = self.cleaned_data.get("password")
+        password2 = self.cleaned_data.get("password2")
+        if password != password2:
+            raise forms.ValidationError("Passwords do not match")
+        validate_password(password)
+
         return data

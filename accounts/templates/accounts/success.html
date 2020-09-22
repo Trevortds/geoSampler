@@ -1,0 +1,19 @@
+
+{% extends "base.html" %}
+
+{% block scripts %}
+    <script>
+    setTimeout(function() {
+        window.location.href = "/";
+    }, 5000);
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+      <div class="col-md-6 mx-auto">
+        <h1> {{ message }} </h1>
+          <h2>redirecting to main page in 5 seconds</h2>
+      </div>
+    </div>
+{% endblock %}

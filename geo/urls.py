@@ -18,7 +18,7 @@ from django.urls import path, include, reverse
 from .views import home_page
 from django.conf.urls.static import static
 from django.conf import settings
-from accounts.views import login_page, register_page
+from accounts.views import login_page, register_page, password_change_page
 from django.contrib.auth.views import LogoutView
 from django.http import HttpResponseRedirect
 
@@ -33,6 +33,7 @@ urlpatterns = [
     path('samples/', include(('samples.urls', "samples")), name="samples"),
     path('jobs/', include(('jobs.urls', "jobs")), name="jobs"),
     path('register/', register_page, name="register"),
+    path('change_password/', password_change_page, name="password_change"),
 ]
 
 if settings.DEBUG:

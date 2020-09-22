@@ -1,9 +1,10 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, get_user_model, logout
 # from django.contrib.auth.models import User
-from .forms import LoginForm, RegisterForm, GuestForm
+from .forms import LoginForm, RegisterForm, GuestForm, PasswordChangeForm
 from django.utils.http import is_safe_url
 
 
@@ -64,3 +65,23 @@ def register_page(request):
         login(request, new_user, backend='django.contrib.auth.backends.ModelBackend')
         return redirect("/")
     return render(request, "accounts/register.html", context)
+
+
+@login_required
+def password_change_page(request):
+    form = PasswordChangeForm(request.POST or None, username=request.user.username)
+    context = {
+        "form": form
+    }
+
+    if form.is_valid():
+        old_password = form.cleaned_data.get("old_password")
+        user = authenticate(username=request.user.username, password=old_password)  # this is duplicate, but w/e
+        if user is not None:
+            user.set_password(form.cleaned_data.get("password"))
+            user.save()
+            login(request, user)
+            return render(request, "accounts/success.html",
+                          {"message": "Password successfully updated, redirecting you to home page"})
+
+    return render(request, "accounts/change_password.html", context)
