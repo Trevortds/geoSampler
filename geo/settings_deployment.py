@@ -36,7 +36,7 @@ POSTGIS_NAME = os.environ.get("POSTGIS_NAME") or "postgres"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["geo.trevor-sullivan.tech", "geoprod.trevor-sullivan.tech", "localhost"]
+ALLOWED_HOSTS = ["edtgeodata.edtinc.net", "geo.trevor-sullivan.tech", "geoprod.trevor-sullivan.tech", "localhost"]
 
 ADMINS = [("Trevor", 'trevor@trevor-sullivan.tech')]
 MANAGERS = ADMINS
@@ -60,12 +60,12 @@ DATABASES = {
     }
 }
 
-
 EMAIL_BACKEND= 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = 'smtp.office365.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'trevordjangoapp@gmail.com'
+EMAIL_HOST_USER = 'geodata@edtinc.net'
+SERVER_EMAIL = EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 if not EMAIL_HOST_PASSWORD:
     from .secrets import EMAIL_HOST_PASSWORD
