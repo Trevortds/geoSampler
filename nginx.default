@@ -3,7 +3,7 @@ server {
     server_name _;
 
     location / {
-        if ( $host !~* ^(geo.trevor-sullivan.tech|geoprod.trevor-sullivan.tech|localhost|)$ ) {
+        if ( $host !~* ^(edtgeodata.edtinc.net|geo.trevor-sullivan.tech|geoprod.trevor-sullivan.tech|localhost|)$ ) {
            return 444;
         }
         proxy_pass http://127.0.0.1:8010;
