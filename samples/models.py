@@ -100,7 +100,7 @@ class Sample(models.Model):
                                                    null=True, blank=True)
     resistivity_saturated    = models.DecimalField(verbose_name="Resistivity Saturated (KΩ-cm)", decimal_places=2,
                                                    max_digits=10, null=True, blank=True)
-    field_resistivity        = models.DecimalField(verbose_name="Field Resistivity", decimal_places=5, max_digits=15,
+    field_resistivity        = models.DecimalField(verbose_name="Field Resistivity(Ω-cm)", decimal_places=5, max_digits=15,
                                                    blank=True, null=True)
     carbonate                = models.CharField(verbose_name="Carbonate", max_length=32, choices=PRES_ABS_CHOICES,
                                                 null=True, blank=True)
@@ -129,7 +129,10 @@ class Sample(models.Model):
         """used by frontend map, which expects lat ang long backwards"""
         return Point(float(self.latitude), float(self.longitude))
 
-    # @property
+    @property
+    def absolute_url(self):
+        return self.get_absolute_url()
+
     def get_absolute_url(self):
         # f"/products/{self.slug}"
         return reverse("samples:detail", kwargs={"sample_no": self.sample_no})

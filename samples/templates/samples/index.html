@@ -14,6 +14,24 @@
             display: block;
     }
     </style>
+
+    <style>
+    .legend-area {
+        background-color: rgb(24,26,27);
+        background-image: none;
+        outline-color: rgb(140,130,115);
+    }
+    .legend-area {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        padding: 10px;
+        background: white;
+        outline: 3px solid black;
+        line-height: 1em;
+    }
+
+    </style>
 {% endblock %}
 {% block scripts %}
     <script src="{% static "js/heatmap.min.js" %}"></script>
@@ -21,7 +39,39 @@
     <script src="{% static "js/leaflet-heatmap.js" %}"></script>
 
     <script type="text/javascript">
-          var collection = {{ object_list|geojsonfeature:"sample_no,job_name,awwa,field_resistivity"|safe }};
+          var collection = {{ object_list|geojsonfeature:"sample_no,job_name,awwa,field_resistivity,absolute_url"|safe }};
+
+          {#var legendBox = document.getElementById("legendBox");#}
+          {#document.getElementsByClassName("HeatmapCanvas").appendChild(legendBox)#}
+          {##}
+          {#var legendCanvas = document.createElement('canvas');#}
+          {#var realmax = 1;#}
+          {#var realmin = 0;#}
+          {#legendCanvas.width = 100;#}
+          {#legendCanvas.height = 10;#}
+          {#var min = document.querySelector('#min');#}
+          {#var max = document.querySelector('#max');#}
+          {#var gradientImg = document.querySelector('#gradient');#}
+          {#var legendCtx = legendCanvas.getContext('2d');#}
+          {#var gradientCfg = {};#}
+          {#function updateLegend(data) {#}
+          {#  // the onExtremaChange callback gives us min, max, and the gradientConfig#}
+          {#  // so we can update the legend#}
+          {#  min.innerHTML = data.min;#}
+          {#  max.innerHTML = data.max;#}
+          {#  // regenerate gradient image#}
+          {#  if (data.gradient != gradientCfg) {#}
+          {#    gradientCfg = data.gradient;#}
+          {#    var gradient = legendCtx.createLinearGradient(0, 0, 100, 1);#}
+          {#    for (var key in gradientCfg) {#}
+          {#      gradient.addColorStop(key, gradientCfg[key]);#}
+          {#    }#}
+          {#    legendCtx.fillStyle = gradient;#}
+          {#    legendCtx.fillRect(0, 0, 100, 10);#}
+          {#    gradientImg.src = legendCanvas.toDataURL();#}
+          {#  }#}
+          {# }#}
+
 
           function getFeaturesInView(map) {
               var features = [];
@@ -71,7 +121,8 @@
                    return {}; // style properties here
                },
                onEachFeature: function (feature, layer) {
-                   layer.bindPopup(feature.properties.sample_no + "</br>" + feature.properties.job_name + "</br>" +
+                   layer.bindPopup("<a href='" + feature.properties.absolute_url + "'> "+
+                       feature.properties.sample_no + "</a>" + "</br>" + feature.properties.job_name + "</br>" +
                        feature.properties.awwa + "</br>" + feature.properties.field_resistivity );
                    sample_markers.addLayer(layer)
                    if (feature.properties.field_resistivity !== null && feature.properties.field_resistivity !== "") {
@@ -91,7 +142,8 @@
                    }
                }
               });
-
+              {#realmax = heatmapData["max"]#}
+              {#realmin = heatmapData["min"]#}
               var hardMin = true
               if (hardMin) {
                   {#heatmapData["max"] = resistivityScore(0.1);#}
@@ -167,7 +219,10 @@
                       "0.16": "rgb(255,128,0)",
                       "0.31": "red"
 
-                   }
+                  }
+                  {#onExtremaChange: function(data) {#}
+                  {#    updateLegend(data);#}
+                  {# }#}
               };
               var heatmapLayer = new HeatmapOverlay(cfg);
               var baseMaps ={"Grayscale": grayscale, "Streets": streets};
@@ -182,6 +237,25 @@
               L.control.layers(baseMaps, overlayMaps).addTo(map);
               heatmapLayer.setData(heatmapData)
 
+              {#var legend = L.control({position: 'bottomright'});#}
+              {##}
+              {#legend.onAdd = function (map) {#}
+              {##}
+              {#    var div = L.DomUtil.create('div', 'info legend'),#}
+              {#        grades = ["Car", "ball"],#}
+              {#        labels = ["http://datentaeter.de/wp-content/uploads/2016/06/flag_de.png","http://datentaeter.de/wp-content/uploads/2016/06/flag_de.png"];#}
+              {##}
+              {#    // loop through our density intervals and generate a label with a colored square for each interval#}
+              {#    for (var i = 0; i < grades.length; i++) {#}
+              {#        div.innerHTML +=#}
+              {#            grades[i] + (" <img src="+ labels[i] +" height='50' width='50'>") +'<br>';#}
+              {#    }#}
+              {##}
+              {#    return div;#}
+              {# };#}
+              {##}
+              {#legend.addTo(map);#}
+
       }
     </script>
 {% endblock %}
@@ -193,7 +267,12 @@
         <div class="col-11 mx-auto">
             <div class="alert alert-secondary" role="alert" style="min-height: 300px">
                 {% leaflet_map "samples_map" callback="window.map_init" %}
-
+{#                <div id="legendBox" class="legend-area">#}
+{#                    <h4>Legend Title</h4>#}
+{#                    <span id="min">4</span>#}
+{#                    <span id="max">1208</span>#}
+{#                    <img id="gradient" src="#" style="width: 100%">#}
+{#                </div>#}
             </div>
         </div>
 

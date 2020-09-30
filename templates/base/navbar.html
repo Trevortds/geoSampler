@@ -6,20 +6,26 @@
 {% url 'products:list' as products_url%}
 {% url 'products:detail' slug='kelvi' as kelvi_url%}
 {% url 'cart:home' as cart_url%}
+{% load static %}
 
 {#<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">#}
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3">
     <div class="container">
-    <a class="navbar-brand" href="{{ home_url }}"> {% if brand_name %} {{ brand_name }}{% else %}GeoSampler{% endif %}</a>
+    <a class="navbar-left" href="{{ samples_url }}">
+        <img src="{% static "img/logo.png" %}" style="max-width: 50px; background: white; margin-right: 7px">
+    </a>
+    <a class="navbar-brand" href="{{ samples_url }}">
+        {% if brand_name %} {{ brand_name }}{% else %}GeoSampler{% endif %}
+    </a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
+    <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item {% if request.path == home_url %}active{% endif %}">
-                <a class="nav-link" href="{{ home_url }}">Home <span class="sr-only">(current)</span></a>
-            </li>
+{#            <li class="nav-item {% if request.path == home_url %}active{% endif %}">#}
+{#                <a class="nav-link" href="{{ home_url }}">Home <span class="sr-only">(current)</span></a>#}
+{#            </li>#}
             <li class="nav-item {% if request.path == samples_url %}active{% endif %}">
                 <a class="nav-link" href="{{ samples_url }}">Samples</a>
             </li>
