@@ -304,11 +304,11 @@ def pre_save_sample_reciever(sender, instance, *args, **kwargs):
     try:
         instance.awwa = instance.get_awwa_rating()
     except (ValueError, TypeError):
-        print("Failed to calculate awwa")
+        print(f"Failed to calculate awwa on sample {instance.sample_no}")
     try:
         instance.wssc = instance.get_wssc_rating()
     except (ValueError, TypeError):
-        print("failed to calculat wssc")
+        print(f"Failed to calculate wssc on sample {instance.sample_no}")
     instance.point = instance.get_point()
     # if instance.job_id is None:
     #     instance.job_id = instance.job.job_no
