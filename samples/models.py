@@ -90,7 +90,7 @@ class Sample(models.Model):
                                                    null=True, blank=True)
     chloride                 = models.DecimalField(verbose_name="Chloride (ppm)", decimal_places=2, max_digits=10,
                                                    null=True, blank=True)
-    sulfate                  = models.DecimalField(verbose_name="Sulfate (ppm", decimal_places=1, max_digits=10,
+    sulfate                  = models.DecimalField(verbose_name="Sulfate (ppm)", decimal_places=1, max_digits=10,
                                                    null=True, blank=True)
     salinity                 = models.DecimalField(verbose_name="Salinity (%)", decimal_places=2, max_digits=10,
                                                    null=True, blank=True)
@@ -303,12 +303,12 @@ class Sample(models.Model):
 def pre_save_sample_reciever(sender, instance, *args, **kwargs):
     try:
         instance.awwa = instance.get_awwa_rating()
-    except (ValueError, TypeError):
-        print(f"Failed to calculate awwa on sample {instance.sample_no}")
+    except (ValueError, TypeError) as e:
+        print(f"Failed to calculate awwa on sample {instance.sample_no}: {e}")
     try:
         instance.wssc = instance.get_wssc_rating()
-    except (ValueError, TypeError):
-        print(f"Failed to calculate wssc on sample {instance.sample_no}")
+    except (ValueError, TypeError) as e:
+        print(f"Failed to calculate wssc on sample {instance.sample_no}: {e}")
     instance.point = instance.get_point()
     # if instance.job_id is None:
     #     instance.job_id = instance.job.job_no
